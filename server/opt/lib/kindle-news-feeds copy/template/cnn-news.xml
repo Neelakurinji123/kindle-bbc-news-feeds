@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<data>
+	<station name="World">
+		<url>http://rss.cnn.com/rss/edition_world.rss</url>
+        <image>
+        	<img_path>//meta[@property='og:image']</img_path>
+        </image>
+	</station>
+	<station name="Money">
+		<url>http://rss.cnn.com/rss/money_news_international.rss</url>
+        <image>
+        	<img_path>//meta[@property='og:image']</img_path>
+        </image>
+	</station>
+	<station name="Technology">
+		<url>http://rss.cnn.com/rss/edition_technology.rss</url>
+        <image>
+        	<img_path>//meta[@property='og:image']</img_path>
+        </image>
+	</station>
+	<station name="Science_and_Space">
+		<url>http://rss.cnn.com/rss/edition_space.rss</url>
+        <image>
+        	<img_path>//meta[@property='og:image']</img_path>
+        </image>
+	</station>
+	<station name="Entertainment">
+		<url>http://rss.cnn.com/rss/edition_entertainment.rss</url>
+        <image>
+        	<img_path>//meta[@property='og:image']</img_path>
+        </image>
+	</station>
+	<station name="World Sport">
+		<url>http://rss.cnn.com/rss/edition_sport.rss</url>
+        <image>
+        	<img_path>//meta[@property='og:image']</img_path>
+        </image>
+	</station>
+	<station name="Football">
+		<url>http://rss.cnn.com/rss/edition_football.rss</url>
+        <image>
+        	<img_path>//meta[@property='og:image']</img_path>
+        </image>
+	</station>
+
+        
+</data>

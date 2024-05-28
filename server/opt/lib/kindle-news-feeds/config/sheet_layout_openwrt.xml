@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<data>
+	<service name="paper">
+		<paper_layout>landscape</paper_layout>
+        <encoding>iso-8859-1</encoding>
+		<font>/root/.fonts/Sans_Regular.ttf</font>
+		<italic_font></italic_font>
+		<bold_font></bold_font>
+		<italic></italic>
+		<title_font_size>40</title_font_size>
+		<title_row_length>700</title_row_length>
+		<title_font_space>10</title_font_space>
+		<title_rows>3</title_rows>
+		<title_y_padding>45</title_y_padding>
+		<summary_font_size>20</summary_font_size>
+		<summary_row_length>680</summary_row_length>
+		<summary_font_space>5</summary_font_space>
+		<summary_rows>3</summary_rows>
+		<summary_y_padding>30</summary_y_padding>
+		<img_effect>6</img_effect>
+	</service>
+</data>

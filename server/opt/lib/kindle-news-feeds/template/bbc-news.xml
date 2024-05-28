@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<data>
+	<station name="top stories">
+		<url>http://feeds.bbci.co.uk/news/rss.xml</url>
+        <img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="world">
+		<url>http://feeds.bbci.co.uk/news/world/rss.xml</url>
+        <img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="uk">
+		<url>http://feeds.bbci.co.uk/news/uk/rss.xml</url>
+        <img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="business">
+		<url>http://feeds.bbci.co.uk/news/business/rss.xml</url>
+        <img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="politics">
+		<url>http://feeds.bbci.co.uk/news/politics/rss.xml</url>
+        <img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="health">
+		<url>http://feeds.bbci.co.uk/news/health/rss.xml</url>
+        <img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="education">
+		<url>http://feeds.bbci.co.uk/news/education/rss.xml</url>
+        <img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="science">
+		<url>http://feeds.bbci.co.uk/news/science_and_environment/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="technology">
+		<url>http://feeds.bbci.co.uk/news/technology/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="entertainment">
+		<url>http://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="africa">
+		<url>http://feeds.bbci.co.uk/news/world/africa/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="asia">
+		<url>http://feeds.bbci.co.uk/news/world/asia/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="europe">
+		<url>http://feeds.bbci.co.uk/news/world/europe/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="latin america">
+		<url>http://feeds.bbci.co.uk/news/world/latin_america/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="middle east">
+		<url>http://feeds.bbci.co.uk/news/world/middle_east/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="us and canada">
+		<url>http://feeds.bbci.co.uk/news/world/us_and_canada/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="england">
+		<url>http://feeds.bbci.co.uk/news/england/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="northern ireland">
+		<url>http://feeds.bbci.co.uk/news/northern_ireland/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="scotland">
+		<url>http://feeds.bbci.co.uk/news/scotland/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>
+	<station name="wales">
+		<url>http://feeds.bbci.co.uk/news/wales/rss.xml</url>
+    	<img_path>//meta[@property='og:image']</img_path>
+	</station>    
+</data>
