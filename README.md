@@ -206,7 +206,7 @@ ssh root@192.168.2.2  # test passwordless login
 
 ```
 cd /opt/lib/kindle-bbc-news-feeds
-./kindle-weather.sh [settings_#####.xml]
+./kindle-news-feeds.sh [settings_#####.xml]
 ```
 
 ## Set up time schedule
