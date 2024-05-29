@@ -1,7 +1,0 @@
-feedparser
-lxml
-astral
-
-
-# misc
-font

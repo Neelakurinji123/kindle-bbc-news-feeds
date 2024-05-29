@@ -1,204 +1,252 @@
-# kindle-news-feeds-display
+# Kindle bbc news feeds
  
-This repo is display bbc & cnn news feeds on old kindle 3
+This repo is for a bbc feeds display on old kindle 3.
 
-### Screenshot
-<img src="screenshot.jpg" width="300" alt="Kindle 3 screenshot" />
+## Screenshots
 
-## Setup
-### kindle
-1. jailbreak your Kindle
-2. access to kindle via usbnet:
-```
-ip a add 192.16.2.1/24 dev usb0
-ip link set usb0 up
-ssh root@192.168.2.2 (no password)
-```
-3. create a directory and mount tmpfs:
-```
-mntroot rw
-mkdir /www
-mount -t tmpfs tmpfs /www
-mntroot ro
-```
-4. copy kindle/kindle-news-feeds and kindle/launchpad to /mnt/us folder:
-```
-scp kindle/kkindle-news-feeds kindle/launchpad root@192.168.2.2:/tmp
-ssh root@192.168.2.2 (no password)
-mv /tmp/kindle-news-feeds /mnt/us
-mv /tmp/launchpad/* mnt/us/launchpad
-```
-5. create a file
-```
-touch /mnt/us/kindle-news-feeds/enable
-```
-6. edit /etc/fstab: 
-```
-tmpfs             /www          tmpfs  defaults,size=16m 0 0
-```
-7. setup cron: (example)
-```
-/etc/crontab/root
-20,25,50,55 * * * * sh /mnt/us/kindle-news-feeds/script.sh
-```
-8. setup usbnet:
-```
-cd /mnt/us/usbnet
-cp DISABLED_auto auto
-mv DISABLED_auto DISABLED_auto.orig
-```
-9. disable kindle
-```
-/etc/init.d/powerd stop
-/etc/init.d/framework stop
-```
-10. optionally install kindle-debian, system can improve
+<img src="sample_images/screenshot.jpg" height="360" alt="Kindle 3 Screenshot" />&nbsp;
 
-### server
-1. setup usbnet:
-```
-usbnet: /etc/network/interfaces
-    
-    auto usb0
-      iface usb0 inet static
-      address 192.168.2.1
-      netmask 255.255.255.0
-      broadcast 192.168.2.255
-      network 192.168.2.0
-```
-2. copy kindle-news-feeds-host to server:
-```
-cp -a host-server/var/lib/kindle-news-feeds-host /var/lib
-```
-3. install packages and setup: (eg. debian buster)
-```
-    image processors:
-    apt install imagemagick imagemagick-6-common imagemagick-6.q16 \
-      imagemagick-common libgraphicsmagick-q16-3 libmagickcore-6.q16-6 \
-      libmagickcore-6.q16-6-extra libmagickwand-6.q16-6 pngcrush potrace
+<kbd><img src="sample_images/KindleNewsStation_flatten_2.png" height="360" alt="Kindle 3 Screenshot" /></kbd>&nbsp;
 
-    graphicsmagick:
-    apt install graphicsmagick libgraphicsmagick++-q16-12 libgraphicsmagick-q16-3
+## Requirements
 
-    EDIT: /usr/lib/GraphicsMagick-1.3.35/config/type.mgk
-      
-<?xml version="1.0"?>
-<typemap>
-  <include file="type-ghostscript.mgk" />
-  <include file="type-kindle.mgk" /> 
-</typemap>
+- Jailbroken Kindle 3: https://wiki.mobileread.com/wiki/Kindle_Hacks_Information
+- Server: Minimum 256M/100M OpenWrt router or SBC (e.g. OrangePi zero)
+- Server OS: Openwrt, Ubuntu and Debian, etc which work with Python v3.11 or newer.
+- Server's devices: USB port x1, LAN port x1
 
-    ADD: /usr/lib/GraphicsMagick-1.3.35/config/type-kindle.mgk
-       
-<?xml version="1.0"?>
-<typemap>
-  <type
-    name="Droid-Sans"
-    fullname="Droid Sans"
-    family="Droid Sans"
-    weight="400"
-    style="normal"
-    stretch="normal"
-    glyphs="/root/.fonts/Delicious/Sans_Regular.ttf"
-    />
-  <type
-    name="Sans-Bold"
-    fullname="Sans-Bold"
-    family="Droid Sans"
-    weight="700"
-    style="normal"
-    stretch="normal"
-    glyphs="/root/.fonts/Delicious/Sans_Bold.ttf"
-    />
-  <type
-    name="Sans-Bold-Italic"
-    fullname="Sans Bold Italic"
-    family="Droid Sans"
-    weight="700"
-    style="italic"
-    stretch="normal"
-    glyphs="/root/.fonts/Delicious/Sans_BoldItalic.ttf"
-    />
-  <type
-    name="Sans-Italic"
-    fullname="Sans Italic"
-    family="Droid Sans"
-    weight="400"
-    style="italic"
-    stretch="normal"
-    glyphs="/root/.fonts/Delicious/Sans_Italic.ttf"
-    />
-</typemap>
 
-    web server:
-    apt install nginx-light
 
-    firewall:
-    apt install shorewall
-    
-    EDIT: /etc/shorewall/interfaces
-    choose the right interface
-    
-    ntp server:
-    apt install ntp
-```
-4. install python3 modules: feedparser, requests, lxml
-```
-apt install python3-feedparser python3-lxml python3-pil python3-pip \
-  python3-requests python3-wheel python3-fontconfig python3-setuptools \
-  python3-astral
-    
-pip3 install pytz
-```
-5. setup font:
-```
-apt install fontconfig
+## Kindle PNG format
 
-extract from a font archive and copy ttf fonts to /root/.fonts folder:
-unzip Delicious.zip
-mkdir -p /root/.fonts
-mv Delicious /root/.fonts
-fc-cache -v -f
-```
-6. setup cron: (example)
-```
-/etc/cron.d/kindle-news-feeds
+kindle requires special PNG format. Converting process is as follows:
 
-15 * * * * root sh -c "/var/lib/kindle-news-feeds-host/kindle-news-feeds.sh"
-21 */2 * * * root sh -c "/var/lib/kindle-news-feeds-host/kindle-news-feeds.sh settings-bbc-business.xml"
-21 1-23/2 * * * root sh -c "/var/lib/kindle-news-feeds-host/kindle-news-feeds.sh settings-bbc-technology.xml"
-45 * * * * root sh -c "/var/lib/kindle-news-feeds-host/kindle-news-feeds.sh settings-cnn-World.xml"
-51 */2 * * * root sh -c "/var/lib/kindle-news-feeds-host/kindle-news-feeds.sh settings-cnn-football.xml"
-51 1-23/2 * * * root sh -c "/var/lib/kindle-news-feeds-host/kindle-news-feeds.sh settings-cnn-Entertainment.xml"
+```
+                                               [The server sends a PNG file to Kindle and displays it]
+ SVG image ------------> PNG image ----------> flattened PNG image --> Kindle Dispaly
+           converter:              converter:
+            Wand                    convert
+            cairosvg
+            qrcode
+           
 ```
 
-### setting
-Edit settings.xml
+## Set up server
 
-### dark mode
-If enable dark mode, edit 'dark_mode', 'lat', 'lng' and 'timezone' in display.xml.
+### 1. Install the program
+
+Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle-bbc-news-feeds`.
+
+### 2. Edit config files
+
+#### a) user config
+
+`config/user.xml`
+
+- timezone: required
+- dark\_mode: (WIP)
+- lat & Lon (coordinate): optional
+
+#### b) sheet layout
+
+`config/sheet_layout###.xml`
+
+- paper\_layout: 'landscape' (fixed)
+- encoding: 'iso-8859-1' (fixed)
+- font: (any font name in server, a full font path in Openwrt)
+- img\_effect: From 0 to 6 (one of ineger)
+
+#### c) sheet layout
+
+`settings######.xml`
+
+- Site setting
+  - template: 'bbc-news' (fixed)
+  - category: String (one of valid category)
+  - entries : Integer (entry number)
+  - layout: Sheet layout file, e.g. `config/sheet_layout.xml`
+  - logo_image: Image file location
+  - breaking\_news\_only: Boolean (WIP)
+- Kindle setting
+  - duration: Integer, duration of each article
+  - repeat: Integer, repeat number of entries
+  - display\_reset: Boolean
+  - post_run: String, When a program ends, the server runs the script.
+  
+
+### 4. Install programs, Python3 and it's modules.
+
+#### Application requirements
+
+- imageMagick
+- cairo
+- fontconfig
+
+#### Python3(v3.11 or newer) and module requirements
+
+- pytz
+- requests
+- setuptools
+- pip
+- Wand
+- qrcode
+- feedparser
+- lxml
+- cairosvg
+- astral (optional)
+
+e.g.) Openwrt
+
 ```
-<dark_mode>
-True: dark mode
-False or None: light mode
-Auto: automatic switch between light mode and dark mode according to the time of sunrise and sunset
+opkg update
+opkg install python3 python3-pytz python3-requests python3-setuptools python3-pip
+opkg install imagemagick
+opkg install cairo
+pip3 install lxml
+pip3 install cairosvg
+pip3 install qrcode
+pip3 install astral  # optional
+pip3 install Wand
 
-<lat>
-latitude
-
-<lng>
-longitude
-
-<timezone>
-tz database name
 ```
-<img src="sample_images/cnn-world-dark-mode.png" width="300" alt="kindle news feeds - dark mode" />
 
-### italic
-To enable italic text in summary, edit 'italic' in settings.xml.
-````
-<italic>True</italic>
-````
-### stop this program
-* remove /mnt/us/kindle-news-feeds/enable
-* use shortcut: shift, a, w
+#### Installation for Openwrt: To use Cairo on Openwrt.
+
+
+1. Download SDK from Openwrt site.
+2. Compile `cairo` with SDK and install the build package or use the pre-build package in this repository. (armv8 only)
+3. Install `cairosvg` via pip.
+4. Install a TTF font (e.g. `Sans_Regular.ttf` in this repository) to server's /root/.fonts: 
+5. Run `fc-cache -f`
+
+
+e.g.)
+
+```
+opkg install cairo_1.16.0-2_aarch64_generic.ipk
+opkg install fontconfig
+pip3 install cairosvg
+```
+
+### 5. Network Time Synchronization
+
+To retrieve data correctly, setup NTP server.
+
+### 6. Test run
+
+All set up finished, then try it.
+
+`./SVG.py` # use default config
+
+or one of config files:
+
+`./SVG.py settings_######.xml`
+
+Take a look at `/etc/KindleNewsStation_flatten.png`.
+
+
+### 7. Install USB network
+
+Connect a USB cable to both the server and Kindle.&nbsp;
+USB cable uses for network and power supply.&nbsp;
+Install all relevant packages.&nbsp;
+
+e.g.) Openwrt
+
+```
+opkg install kmod-usb-net kmod-usb-net-rndis kmod-usb-net-cdc-ether usbutils
+```
+
+## Set up Kindle
+
+### 1. Set up usbnet
+
+The server: 192.168.2.1/24
+
+Kindle    : 192.168.2.2/24 (fixed address)
+
+```
+                LOCAL NETWORK               USB NETWORK			
+                e.g.(192.168.1.0/24)
+ WAN <-> ROUTER <--------------> THE SERVER <------> KINDLE
+                                 192.168.2.1/24      192.168.2.2/24
+		
+```
+When usbnet setup is finished, access to Kindle. (no password)
+
+```
+ssh root@192.168.2.2
+```
+
+### 2. Set up ssh Auth key
+
+- Create the server's pubkey.
+- Set up the server's ssh client environment.
+- Copy the server's ssh pubkey to Kindle.
+
+e.g) dropbear (OpenWrt)
+
+```
+cd /etc/dropbear
+dropbearkey -y -f dropbear_rsa_host_key | grep "^ssh-rsa " > dropbear_rsa_host_key.pub
+mkdir /root/.ssh
+cd /root/.ssh
+ln -s /etc/dropbear/dropbear_rsa_host_key id_dropbear
+cd -
+scp dropbear_rsa_host_key.pub root@192.168.2.2:/tmp
+ssh root@192.168.2.2  # access to Kindle
+cat /tmp/dropbear_rsa_host_key.pub >> /mnt/us/usbnet/etc/authorized_keys
+exit
+ssh root@192.168.2.2  # test passwordless login
+```
+
+
+
+### 3. Test run
+
+```
+cd /opt/lib/kindle-bbc-news-feeds
+./kindle-weather.sh [settings_#####.xml]
+```
+
+## Set up time schedule
+
+Edit the server's crontab and restart cron.
+
+
+### Scenario 1
+
+To display the news feeds every hour.
+
+e.g.) 
+
+`crontab -e`
+
+```
+30 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.sh 2>>/tmp/kindle-news-station.err'
+
+```
+
+```
+/etc/init.d/cron stop
+/etc/init.d/cron start
+```
+
+### Scenario 2 (WIP)
+
+To display the only breaking news feed.
+
+`settings####.xml`
+
+- breaking_news_only: True
+
+`crontab -e`
+
+```
+5,10,15,20,25,30,35,40,45,50,55 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.sh 2>>/tmp/kindle-news-station.err'
+
+```
+
+# Credits
+
+- [bbc](https://www.bbc.com/news) ,British public service broadcaster.

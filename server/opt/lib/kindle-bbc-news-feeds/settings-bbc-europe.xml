@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<data>
+	<service name="station">
+		<template>bbc-news</template>
+		<category>europe</category>
+		<entries>3</entries>
+		<layout>config/sheet_layout.xml</layout>
+		<logo>bbc</logo>
+		<logo_image>images/bbc_logo.png</logo_image>
+		<breaking_news_only>False</breaking_news_only>
+	</service>
+	<service name="env">
+		<duration>3</duration>
+		<repeat>1</repeat>
+		<display_reset>True</display_reset>
+		<post_run>/opt/lib/kindle-weather-station/kindle-weather.sh /opt/lib/kindle-weather-station/settings_landscape_tomorrowio.json 2>>/tmp/kindle-weather-station.err</post_run>
+	</service>
+</data>
