@@ -12,7 +12,7 @@ This repo is for a bbc feeds display on old kindle 3.
 
 - Jailbroken Kindle 3: https://wiki.mobileread.com/wiki/Kindle_Hacks_Information
 - Server: Minimum 256M/100M OpenWrt router or SBC (e.g. OrangePi zero)
-- Server OS: Openwrt, Ubuntu and Debian, etc which work with Python v3.11 or newer.
+- Server OS: Openwrt, Ubuntu and Debian, etc which works with Python v3.11 or newer.
 - Server's devices: USB port x1, LAN port x1
 
 
@@ -123,7 +123,7 @@ pip3 install Wand
 e.g.)
 
 ```
-opkg install cairo_1.16.0-2_aarch64_generic.ipk
+opkg install cairo_1.18.0-1_aarch64_generic.ipk
 opkg install fontconfig
 pip3 install cairosvg
 ```
@@ -142,7 +142,7 @@ or one of config files:
 
 `./SVG.py settings_######.xml`
 
-Take a look at `/etc/KindleNewsStation_flatten.png`.
+Take a look at `/tmp/KindleNewsStation_flatten.png`.
 
 
 ### 7. Install USB network
@@ -184,7 +184,7 @@ ssh root@192.168.2.2
 - Set up the server's ssh client environment.
 - Copy the server's ssh pubkey to Kindle.
 
-e.g) dropbear (OpenWrt)
+e.g.) dropbear (OpenWrt)
 
 ```
 cd /etc/dropbear
@@ -200,7 +200,19 @@ exit
 ssh root@192.168.2.2  # test passwordless login
 ```
 
+e.g.) openssh (Openwrt)
 
+```
+cd /root/.ssh
+opkg update
+opkg install openssh-client openssh-keygen openssh-sftp-client
+ssh-keygen -t ecdsa
+scp id_ecdsa.pub root@192.168.2.2:/tmp
+ssh root@192.168.2.2  # access to Kindle
+cat /tmp/id_ecdsa.pub >> /mnt/us/usbnet/etc/authorized_keys
+exit
+ssh root@192.168.2.2  # test passwordless login
+```
 
 ### 3. Test run
 

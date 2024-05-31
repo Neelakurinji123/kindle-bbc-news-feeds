@@ -21,7 +21,6 @@ from PIL import ImageFont
 from wand.image import Image
 from wand.display import display
 from cairosvg import svg2png
-#import astral
 from astral import LocationInfo
 from astral.sun import sun
 import qrcode
@@ -215,6 +214,12 @@ class WordProccessing:
                             high_white=white_point + delta,
                             high_black=black_point + delta)
                         png_blob = i.make_blob('png')
+                    elif layout['img_effect'] == 7: # black & white
+                        i.transform_colorspace('gray')
+                        i.background_color = 'white'
+                        i.alpha_channel = False
+                        i.threshold(threshold=0.25)
+                        png_blob = i.make_blob('png')
         finally:
             clip.close()
         return png_blob
@@ -333,9 +338,6 @@ class WordProccessing:
 
     def daytime(self):
         config = self.config
-        # dark mode
-        #tree = ET.parse('display.xml')
-        #root = tree.getroot()
         lat = config['lat'] if 'lat' in config else None
         lon = config['lon'] if 'lon' in config else None
         zone = config['timezone']
@@ -378,8 +380,13 @@ if __name__ == "__main__":
 
     config = read_config(setting=a, user=user_setting)
     entries = get_source(config['url'], entries=config['entries'])
+    if not entries == list(): s = entries[0]['title']
+    # breaking news
+    if config['breaking_news'] == True:
+        if not re.search('breaking', s, re.IGNORECASE):
+            exit(0)
+    
     if  flag_dump == True:
-        #import pprint
         print(json.dumps(config, indent=4, ensure_ascii=False))
         for entry in entries:
             print(json.dumps(entry, indent=4, ensure_ascii=False))
@@ -407,7 +414,7 @@ if __name__ == "__main__":
             img.save(filename=pngfile)
             t.sleep(1)
             out = Popen(['convert', '-rotate', '+90', '-flatten', pngfile, flatten_pngfile])
-            #display(img)
+            display(img)
         img.close()
     
     # Create env
