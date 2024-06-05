@@ -10,7 +10,7 @@ This repo is for a bbc feeds display on old kindle 3.
 
 ## Requirements
 
-- Jailbroken Kindle 3: https://wiki.mobileread.com/wiki/Kindle_Hacks_Information
+- Jailbroken Kindle 3: https://wiki.mobileread.com/wiki/Kindle\_Hacks\_Information
 - Server: Minimum 256M/100M OpenWrt router or SBC (e.g. OrangePi zero)
 - Server OS: Openwrt, Ubuntu and Debian, etc which works with Python v3.11 or newer.
 - Server's devices: USB port x1, LAN port x1
@@ -84,7 +84,7 @@ Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle
 
 #### Python3(v3.11 or newer) and module requirements
 
-- pytz
+- tzdata
 - requests
 - setuptools
 - pip
@@ -136,18 +136,18 @@ To retrieve data correctly, setup NTP server.
 
 All set up finished, then try it.
 
-`./SVG.py` # use default config
+`./kindle-news-feeds.py png` # use default config
 
 or one of config files:
 
-`./SVG.py settings_######.xml`
+`./kindle-news-feeds.py settings_######.xml png`
 
 Take a look at `/tmp/KindleNewsStation_flatten.png`.
 
 
 ### 7. Install USB network
 
-Connect a USB cable to both the server and Kindle.&nbsp;
+Connect a USB cable to both server and Kindle.&nbsp;
 USB cable uses for network and power supply.&nbsp;
 Install all relevant packages.&nbsp;
 
@@ -161,9 +161,9 @@ opkg install kmod-usb-net kmod-usb-net-rndis kmod-usb-net-cdc-ether usbutils
 
 ### 1. Set up usbnet
 
-The server: 192.168.2.1/24
+Server : 192.168.2.1/24
 
-Kindle    : 192.168.2.2/24 (fixed address)
+Kindle 3 : 192.168.2.2/24 (fixed address)
 
 ```
                 LOCAL NETWORK               USB NETWORK			
@@ -180,9 +180,9 @@ ssh root@192.168.2.2
 
 ### 2. Set up ssh Auth key
 
-- Create the server's pubkey.
-- Set up the server's ssh client environment.
-- Copy the server's ssh pubkey to Kindle.
+- Create server's pubkey.
+- Set up server's ssh client environment.
+- Copy server's ssh pubkey to Kindle.
 
 e.g.) dropbear (OpenWrt)
 
@@ -218,24 +218,24 @@ ssh root@192.168.2.2  # test passwordless login
 
 ```
 cd /opt/lib/kindle-bbc-news-feeds
-./kindle-news-feeds.sh [settings_#####.xml]
+./kindle-news-feeds.py [settings_#####.xml]
 ```
 
 ## Set up time schedule
 
-Edit the server's crontab and restart cron.
+Edit server's crontab and restart cron.
 
 
 ### Scenario 1
 
-To display the news feeds every hour.
+To display news feeds every hour.
 
 e.g.) 
 
 `crontab -e`
 
 ```
-30 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.sh 2>>/tmp/kindle-news-station.err'
+30 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.py 2>>/tmp/kindle-news-station.err'
 
 ```
 
@@ -246,16 +246,16 @@ e.g.)
 
 ### Scenario 2 (WIP)
 
-To display the only breaking news feed.
+To display only breaking news feed.
 
 `settings####.xml`
 
-- breaking_news_only: True
+- breaking\_news\_only: True
 
 `crontab -e`
 
 ```
-5,10,15,20,25,30,35,40,45,50,55 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.sh 2>>/tmp/kindle-news-station.err'
+5,10,15,20,25,30,35,40,45,50,55 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.py 2>>/tmp/kindle-news-station.err'
 
 ```
 

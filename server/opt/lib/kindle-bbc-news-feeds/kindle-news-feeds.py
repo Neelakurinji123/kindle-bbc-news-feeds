@@ -6,14 +6,15 @@
 # Update     : 26 May 2024 
 
 import json, os, sys, re, io
+from pathlib import Path
 import time as t
-from datetime import datetime, timedelta, date
-from pytz import timezone
+from datetime import datetime, date
+import zoneinfo
 import requests
 from urllib.request import urlopen
 import feedparser
 import xml.etree.ElementTree as ET
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from lxml import html
 from html.parser import HTMLParser
 from xml.dom import minidom
@@ -24,11 +25,16 @@ from cairosvg import svg2png
 from astral import LocationInfo
 from astral.sun import sun
 import qrcode
-import qrcode.image.svg
-from qrcode.image.pure import PyPNGImage
+
+# Working dir
+this_file = os.path.realpath(__file__)
+path = Path(this_file).parents[0]
+os.chdir(str(path))
+
 import SVGtools
 
-user_setting = 'config/user.xml'   
+# User setting
+user_setting = 'config/user.xml'  
 
 def read_config(setting, user=None):
     config = dict()
@@ -95,7 +101,7 @@ def read_config(setting, user=None):
         #config['dark_mode'] = 'False'
         config['lat'] = '0'
         config['lon'] = '0'
-    tz = timezone(config['timezone'])
+    tz = zoneinfo.ZoneInfo(config['timezone'])
     config['now'] = int(datetime.now(tz).timestamp())
     return config
 
@@ -132,7 +138,7 @@ class WordProccessing:
         _title = self.title
         zone = config['timezone']
         now = config['now']
-        tz = timezone(zone)
+        tz = zoneinfo.ZoneInfo(zone)
         # News clip
         png_clip = self.img_clip()
         # Logo png
@@ -167,8 +173,9 @@ class WordProccessing:
                 bg_img.composite(fg_img, left=(800 - 560), top=(600 - 315))
                 bg_img.format = 'png'
             fg_img.close()
+            bg_img.rotate(90)
+            bg_img.alpha_channel_types = 'flatten'
             img_blob = bg_img.make_blob('png')
-            #display(bg_img)
         bg_img.close()
         return img_blob
         
@@ -249,7 +256,7 @@ class WordProccessing:
         _title = self.title
         zone = config['timezone']
         now = config['now']
-        tz = timezone(zone)
+        tz = zoneinfo.ZoneInfo(zone)
         body = str()
         if layout['paper_layout'] == 'landscape':
             width, height = 800, 600
@@ -262,7 +269,7 @@ class WordProccessing:
         # maintenant
         maintenant = (str.lower(datetime.fromtimestamp(now, tz).strftime('%a, %d %b %H:%M')))
         # published
-        utc = timezone('UTC')
+        utc = zoneinfo.ZoneInfo('UTC')
         published.append(utc)
         d = datetime(*published)
         time = d.timestamp()
@@ -271,10 +278,10 @@ class WordProccessing:
         mi = int((now - time) % 60)
         ago = str(mi) + ' mins ago' if hr == 0 else str(hr) + ' hrs ago'
         ago = str(da) + ' days ago' if not da == 0 else ago         
-        body += SVGtools.text('start', '30px', 20, 40, ( 'created at ' + maintenant)).svg()
+        body += SVGtools.text('start', '30', 20, 40, ( 'created at ' + maintenant)).svg()
         #site = config['logo'] + ' ' + config['category']
-        #body += SVGtools.text('end', '30px', 780, 40, site).svg()
-        body += SVGtools.text('end', '30px', 780, 40, ago).svg()
+        #body += SVGtools.text('end', '30', 780, 40, site).svg()
+        body += SVGtools.text('end', '30', 780, 40, ago).svg()
         body += '</g>\n'
         style = 'stroke:rgb(128,128,128);stroke-width:1px;'
         body += SVGtools.line(x1=(0), x2=(800), y1=(50), y2=(50), style=style).svg()
@@ -304,11 +311,11 @@ class WordProccessing:
             if len(t) > 2 and not len(paragraph) == row:
                 _sp = int((row_length - f.getlength(''.join(t))) / (len(t) - 1))
                 for s in t:
-                    a += SVGtools.text(anchor='start', fontsize=str(font_size) + 'px', x=_x, y=y, v=s).svg()
+                    a += SVGtools.text(anchor='start', fontsize=font_size, x=_x, y=y, v=s).svg()
                     _x += int(f.getlength(s)) + _sp
             else:
                 for s in t:
-                    a += SVGtools.text(anchor='start', fontsize=str(font_size) + 'px', x=_x, y=y, v=s).svg()
+                    a += SVGtools.text(anchor='start', fontsize=font_size, x=_x, y=y, v=s).svg()
                     _x += int(f.getlength(s)) + min_sp
             _x = x
             y += y_padding
@@ -341,7 +348,7 @@ class WordProccessing:
         lat = config['lat'] if 'lat' in config else None
         lon = config['lon'] if 'lon' in config else None
         zone = config['timezone']
-        tz = timezone(zone)
+        tz = zoneinfo.ZoneInfo(zone)
         offset = datetime.now(tz).utcoffset().seconds
         now = config['now']
         try:
@@ -359,33 +366,13 @@ class WordProccessing:
             state = 'day'
         return state
 
-if __name__ == "__main__":
-    flag_dump, flag_config, flag_svg = False, False, False
-    temp_dir = '/tmp/'
-    if 'dump' in sys.argv:
-        flag_dump = True
-        sys.argv.remove('dump')
-    elif 'config' in sys.argv:
-        flag_config = True
-        sys.argv.remove('config')
-    elif 'svg' in sys.argv:
-        flag_svg = True
-        sys.argv.remove('svg')
-        
-    # Use custom settings    
-    if len(sys.argv) > 1:
-        a = sys.argv[1]
-    else:
-        a = "settings.xml"
-
-    config = read_config(setting=a, user=user_setting)
+def main(config, flag_dump, flag_config, flag_svg, flag_png, flag_display):
     entries = get_source(config['url'], entries=config['entries'])
     if not entries == list(): s = entries[0]['title']
     # breaking news
     if config['breaking_news'] == True:
         if not re.search('breaking', s, re.IGNORECASE):
             exit(0)
-    
     if  flag_dump == True:
         print(json.dumps(config, indent=4, ensure_ascii=False))
         for entry in entries:
@@ -405,30 +392,69 @@ if __name__ == "__main__":
         img_blob = p.png(svg=svg)
         with Image(blob=img_blob) as img:
             img.format = 'png'
-            fdir = '/tmp/'
-            fname = 'KindleNewsStation_'
-            pngfile = '/tmp/' + fname + str(n) + '.png'
-            flatten_pngfile = fname + 'flatten_' + str(n) + '.png'
+            fname = 'KindleNewsStation_flatten_'
+            flatten_pngfile = fname + str(n) + '.png'
             filelist.append(flatten_pngfile)
-            flatten_pngfile = fdir + flatten_pngfile
-            img.save(filename=pngfile)
+            img.save(filename='/tmp/' + flatten_pngfile)
             t.sleep(1)
-            out = Popen(['convert', '-rotate', '+90', '-flatten', pngfile, flatten_pngfile])
-            display(img)
+            if flag_display == True:
+                display(img)
+                if n == len(entries):
+                    exit(0)
         img.close()
+    if flag_png == True:
+        exit(0)
+    # Display PNGs on kindle
+    kindle = config['kindle']
+    duration = int(kindle['duration']) * 60
+    repeat = int(kindle['repeat'])
+    display_reset = kindle['display_reset']
+    post_run = kindle['post_run']
+    kindleIP = '192.168.2.2'
+    cmd = f'''`ssh root@{kindleIP} 'pidof powerd'` 
+if [ "$p" != '' ]; then
+    ssh root@{kindleIP} "/etc/init.d/powerd stop"
+    ssh root@{kindleIP} "/etc/init.d/framework stop"
+fi'''
+    while repeat >= 0:
+        repeat -= 1
+        for flatten_pngfile in filelist:
+            out = Popen([cmd], shell=True, stdout=PIPE, stderr=PIPE).wait()
+            cmd = f'scp /tmp/{flatten_pngfile} root@{kindleIP}:/tmp'
+            out = Popen([cmd], shell=True, stdout=PIPE, stderr=PIPE).wait()
+            if display_reset == True:
+                cmd = f'ssh root@{kindleIP} \"cd /tmp; /usr/sbin/eips -c\"'
+                out = Popen([cmd], shell=True, stdout=PIPE, stderr=PIPE).wait()
+            cmd = f'ssh root@{kindleIP} \"cd /tmp; /usr/sbin/eips -g {flatten_pngfile}\"'
+            out = Popen([cmd], shell=True, stdout=PIPE, stderr=PIPE).wait()
+            t.sleep(duration)
+    if not post_run == str():
+        out = Popen([post_run], shell=True, stdout=PIPE, stderr=PIPE).wait()
+
+if __name__ == "__main__":
+    flag_dump, flag_config, flag_svg, flag_png, flag_display = False, False, False, False, False
+    temp_dir = '/tmp/'
+    if 'dump' in sys.argv:
+        flag_dump = True
+        sys.argv.remove('dump')
+    elif 'config' in sys.argv:
+        flag_config = True
+        sys.argv.remove('config')
+    elif 'svg' in sys.argv:
+        flag_svg = True
+        sys.argv.remove('svg')
+    elif 'png' in sys.argv:
+        flag_png = True
+        sys.argv.remove('png')
+    elif 'display' in sys.argv:
+        flag_display = True
+        sys.argv.remove('display')
+        
+    # Use custom settings    
+    if len(sys.argv) > 1:
+        a = sys.argv[1]
+    else:
+        a = "setting.xml"
+    config = read_config(setting=a, user=user_setting)
+    main(config, flag_dump, flag_config, flag_svg, flag_png, flag_display)
     
-    # Create env
-    with open('/tmp/KindleNewsStation.env', 'w') as f:
-        kindle = config['kindle']
-        f.write('duration={}\n'.format(kindle['duration']))
-        f.write('repeat={}\n'.format(kindle['repeat']))
-        f.write('display_reset="{}"\n'.format(kindle['display_reset']))
-        f.write('filelist="{}"\n'.format(' '.join(filelist)))
-        f.write('post_run="{}"\n'.format(kindle['post_run']))
-    f.close()
-
-
-
-
-
-
