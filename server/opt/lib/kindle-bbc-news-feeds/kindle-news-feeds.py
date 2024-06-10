@@ -20,6 +20,7 @@ from html.parser import HTMLParser
 from xml.dom import minidom
 from PIL import ImageFont
 from wand.image import Image
+from wand.drawing import Drawing
 from wand.display import display
 from cairosvg import svg2png
 from astral import LocationInfo
@@ -227,6 +228,14 @@ class WordProccessing:
                         i.alpha_channel = False
                         i.threshold(threshold=0.25)
                         png_blob = i.make_blob('png')
+                    elif layout['img_effect'] == 8: # Sketch
+                        i.transform_colorspace('gray')
+                        i.sketch(0.5, 0.0, 98.0)
+                        png_blob = i.make_blob('png')
+                    elif layout['img_effect'] == 9: # Noise
+                        i.noise("laplacian", attenuate=1.0)
+                        i.transform_colorspace('gray')
+                        png_blob = i.make_blob('png')
         finally:
             clip.close()
         return png_blob
@@ -263,7 +272,7 @@ class WordProccessing:
         else:
             width, height = 600, 800
         header = '<?xml version="1.0" encoding="' + layout['encoding'] + '"?>\n'
-        header += '<svg xmlns="http://www.w3.org/2000/svg" height="{}" width="{}" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">\n'.format(height, width)
+        header += f'<svg xmlns="http://www.w3.org/2000/svg" height="{height}" width="{width}" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">\n'
         header += '<g font-family="' + layout['font'] + '">\n'
     
         # maintenant
@@ -276,8 +285,18 @@ class WordProccessing:
         da = int((now - time) / 86400)
         hr = int((now - time) / 3600)
         mi = int((now - time) % 60)
-        ago = str(mi) + ' mins ago' if hr == 0 else str(hr) + ' hrs ago'
-        ago = str(da) + ' days ago' if not da == 0 else ago         
+        if da == 0 and hr == 0 and mi == 1:
+            ago = str(mi) + ' min ago' 
+        elif da == 0 and hr == 0:
+            ago = str(mi) + ' mins ago'
+        elif da == 0 and hr == 1:
+            ago = str(hr) + ' hr ago'
+        elif da == 0:
+            ago = str(hr) + ' hrs ago'
+        elif da == 1:
+            ago = str(da) + ' day ago'
+        else:
+            ago = str(da) + ' days ago'       
         body += SVGtools.text('start', '30', 20, 40, ( 'created at ' + maintenant)).svg()
         #site = config['logo'] + ' ' + config['category']
         #body += SVGtools.text('end', '30', 780, 40, site).svg()
@@ -306,7 +325,7 @@ class WordProccessing:
         f = ImageFont.truetype(font, font_size)
         row = 1
         _x = x
-        a = '<g font-family="{}">\n'.format(font)
+        a = f'<g font-family="{font}">\n'
         for t in paragraph:
             if len(t) > 2 and not len(paragraph) == row:
                 _sp = int((row_length - f.getlength(''.join(t))) / (len(t) - 1))

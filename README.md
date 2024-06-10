@@ -246,7 +246,8 @@ e.g.)
 
 ### Scenario 2 (WIP)
 
-To display only breaking news feed.
+To display only breaking news feed.&nbsp;
+Check out rss every 10 minutes.
 
 `settings####.xml`
 
