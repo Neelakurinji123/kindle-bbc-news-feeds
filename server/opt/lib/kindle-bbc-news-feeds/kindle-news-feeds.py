@@ -165,7 +165,7 @@ class WordProccessing:
             # Logo image
             with Image(blob=png_logo) as fg_img:
                 #bg_img.composite(fg_img, left=40, top=290)
-                bg_img.composite(fg_img, left=40, top=500)
+                bg_img.composite(fg_img, left=58, top=500)
                 bg_img.format = 'png'
             fg_img.close()
             # Image clip
@@ -249,7 +249,8 @@ class WordProccessing:
         state = self.daytime() if not timezone == 'GMT' and not lat == 0 and not lon == 0 else 'night'
         with Image(filename=logo_image) as img:
             with img.clone() as i:
-                    i.transform(resize='160x80>')
+                    i.transform_colorspace('gray')
+                    #i.transform(resize='240x120>')
                     if state == 'day':
                         i.level(black=0.0, white=None, gamma=5.0)
                     png_blob = i.make_blob('png')

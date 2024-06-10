@@ -6,7 +6,7 @@
 		<entries>3</entries>
 		<layout>config/sheet_layout.xml</layout>
 		<logo>bbc</logo>
-		<logo_image>images/bbc_logo.png</logo_image>
+		<logo_image>images/bbc_news_120x60.gif</logo_image>
 		<breaking_news_only>False</breaking_news_only>
 	</service>
 	<service name="env">
