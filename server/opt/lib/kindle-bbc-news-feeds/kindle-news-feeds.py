@@ -252,7 +252,7 @@ class WordProccessing:
                     i.transform_colorspace('gray')
                     #i.transform(resize='240x120>')
                     if state == 'day':
-                        i.level(black=0.0, white=None, gamma=5.0)
+                        i.level(black=0.0, white=None, gamma=2.5)
                     png_blob = i.make_blob('png')
         return png_blob        
         
@@ -286,8 +286,10 @@ class WordProccessing:
         da = int((now - time) / 86400)
         hr = int((now - time) / 3600)
         mi = int((now - time) % 60)
-        if da == 0 and hr == 0 and mi == 1:
-            ago = str(mi) + ' min ago' 
+        if da == 0 and hr == 0 and mi == 0:
+            ago = 'now'
+        elif da == 0 and hr == 0 and mi == 1:
+            ago = 'now' 
         elif da == 0 and hr == 0:
             ago = str(mi) + ' mins ago'
         elif da == 0 and hr == 1:
@@ -304,7 +306,7 @@ class WordProccessing:
         body += SVGtools.text('end', '30', 780, 40, ago).svg()
         body += '</g>\n'
         style = 'stroke:rgb(128,128,128);stroke-width:1px;'
-        body += SVGtools.line(x1=(0), x2=(800), y1=(50), y2=(50), style=style).svg()
+        body += SVGtools.line(x1=0, x2=800, y1=50, y2=50, style=style).svg()
         
         kwargs1 = {'rows': layout['title_rows'], 'row_length': layout['title_row_length'], 'font': layout['font'], 
                     'font_size': layout['title_font_size'], 'min_sp': layout['title_font_space'], 'y_padding': layout['title_y_padding']}
@@ -319,6 +321,7 @@ class WordProccessing:
         (x, y) = (60, y + 10) if len(title) < 3 else (60, y - 10) 
         a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **kwargs2)
         body += a
+        body += SVGtools.text('start', '16', 5, 595, 'category: ' + config['category']).svg()
         footer = '</svg>\n'
         return header + body + footer
 
@@ -470,7 +473,7 @@ if __name__ == "__main__":
         flag_display = True
         sys.argv.remove('display')
         
-    # Use custom settings    
+    # Use custom setting   
     if len(sys.argv) > 1:
         a = sys.argv[1]
     else:
