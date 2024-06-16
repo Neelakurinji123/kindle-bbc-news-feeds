@@ -103,7 +103,10 @@ def read_config(setting, user=None):
         config['lat'] = '0'
         config['lon'] = '0'
     tz = zoneinfo.ZoneInfo(config['timezone'])
-    config['now'] = int(datetime.now(tz).timestamp())
+    if config['timezone'] == 'local':
+        config['now'] = int(datetime.now().timestamp())
+    else:
+        config['now'] = int(datetime.now(tz).timestamp())
     return config
 
 def get_source(url, entries=1):
@@ -277,7 +280,10 @@ class WordProccessing:
         header += '<g font-family="' + layout['font'] + '">\n'
     
         # maintenant
-        maintenant = (str.lower(datetime.fromtimestamp(now, tz).strftime('%a, %d %b %H:%M')))
+        if config['timezone'] == 'local':
+            maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %d %b %H:%M')))
+        else:
+            maintenant = (str.lower(datetime.fromtimestamp(now, tz).strftime('%a, %d %b %H:%M')))
         # published
         utc = zoneinfo.ZoneInfo('UTC')
         published.append(utc)
@@ -314,13 +320,15 @@ class WordProccessing:
         kwargs2 = {'rows': layout['summary_rows'], 'row_length': layout['summary_row_length'], 'font': layout['font'],
                     'font_size': layout['summary_font_size'], 'min_sp': layout['summary_font_space'], 'y_padding': layout['summary_y_padding']}
         summary = self.wordwrap(paragraph=_summary, **kwargs2)
-        # svg text
-        x, y = 50, 120
+        # svg text: title
+        (x, y) = (50, 105) if (len(title) == 3 and len(summary) >= 3) else (50, 120)
         a, y = self.text_proccessing(x=x, y=y, paragraph=title, **kwargs1)
         body += a
+        # svg text: summary
         (x, y) = (60, y + 10) if len(title) < 3 else (60, y - 10) 
         a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **kwargs2)
         body += a
+        # svg text: category
         body += SVGtools.text('start', '16', 5, 595, 'category: ' + config['category']).svg()
         footer = '</svg>\n'
         return header + body + footer
