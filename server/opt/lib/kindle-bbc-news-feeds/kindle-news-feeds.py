@@ -32,10 +32,7 @@ this_file = os.path.realpath(__file__)
 path = Path(this_file).parents[0]
 os.chdir(str(path))
 
-import SVGtools
-
-# User setting
-user_setting = 'config/user.xml'  
+import SVGtools 
 
 def read_config(setting, user=None):
     config = dict()
@@ -102,11 +99,14 @@ def read_config(setting, user=None):
         #config['dark_mode'] = 'False'
         config['lat'] = '0'
         config['lon'] = '0'
-    tz = zoneinfo.ZoneInfo(config['timezone'])
+    
     if config['timezone'] == 'local':
         config['now'] = int(datetime.now().timestamp())
+        config['tz'] = None
     else:
         config['now'] = int(datetime.now(tz).timestamp())
+        config['tz'] = zoneinfo.ZoneInfo(config['timezone'])
+
     return config
 
 def get_source(url, entries=1):
@@ -133,16 +133,15 @@ class WordProccessing:
         self.title = entry['title']
         
     def png(self, svg=None):
-        config = self.config
-        layout = config['layout']
+        layout = self.config['layout']
         link = self.link
-        media_thumbnail = self.media_thumbnail
-        published = self.published
-        _summary = self.summary
-        _title = self.title
-        zone = config['timezone']
-        now = config['now']
-        tz = zoneinfo.ZoneInfo(zone)
+        #media_thumbnail = self.media_thumbnail
+        #published = self.published
+        #_summary = self.summary
+        #_title = self.title
+        zone = self.config['timezone']
+        now = self.config['now']
+        tz = self.config['tz']
         # News clip
         png_clip = self.img_clip()
         # Logo png
@@ -184,10 +183,8 @@ class WordProccessing:
         return img_blob
         
     def img_clip(self):
-        config = self.config
-        layout = config['layout']
-        media_thumbnail = self.media_thumbnail
-        clip = urlopen(media_thumbnail)
+        layout = self.config['layout']
+        clip = urlopen(self.media_thumbnail)
         try:
             with Image(file=clip) as img:
                 with img.clone() as i:
@@ -244,11 +241,10 @@ class WordProccessing:
         return png_blob
 
     def img_logo(self):
-        config = self.config
-        logo_image = config['logo_image']
-        timezone = config['timezone']
-        lat = config['lat']
-        lon = config['lon']
+        logo_image = self.config['logo_image']
+        timezone = self.config['timezone']
+        lat = self.config['lat']
+        lon = self.config['lon']
         state = self.daytime() if not timezone == 'GMT' and not lat == 0 and not lon == 0 else 'night'
         with Image(filename=logo_image) as img:
             with img.clone() as i:
@@ -260,16 +256,10 @@ class WordProccessing:
         return png_blob        
         
     def svg(self):
-        config = self.config
-        layout = config['layout']
-        link = self.link
-        media_thumbnail = self.media_thumbnail
-        published = self.published
-        _summary = self.summary
-        _title = self.title
-        zone = config['timezone']
-        now = config['now']
-        tz = zoneinfo.ZoneInfo(zone)
+        layout = self.config['layout']
+        zone = self.config['timezone']
+        now = self.config['now']
+        tz = self.config['tz']
         body = str()
         if layout['paper_layout'] == 'landscape':
             width, height = 800, 600
@@ -280,14 +270,14 @@ class WordProccessing:
         header += '<g font-family="' + layout['font'] + '">\n'
     
         # maintenant
-        if config['timezone'] == 'local':
+        if self.config['timezone'] == 'local':
             maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %d %b %H:%M')))
         else:
             maintenant = (str.lower(datetime.fromtimestamp(now, tz).strftime('%a, %d %b %H:%M')))
         # published
         utc = zoneinfo.ZoneInfo('UTC')
-        published.append(utc)
-        d = datetime(*published)
+        self.published.append(utc)
+        d = datetime(*self.published)
         time = d.timestamp()
         da = int((now - time) / 86400)
         hr = int((now - time) / 3600)
@@ -312,14 +302,13 @@ class WordProccessing:
         body += SVGtools.text('end', '30', 780, 40, ago).svg()
         body += '</g>\n'
         style = 'stroke:rgb(128,128,128);stroke-width:1px;'
-        body += SVGtools.line(x1=0, x2=800, y1=50, y2=50, style=style).svg()
-        
+        body += SVGtools.line(x1=0, x2=800, y1=50, y2=50, style=style).svg()  
         kwargs1 = {'rows': layout['title_rows'], 'row_length': layout['title_row_length'], 'font': layout['font'], 
                     'font_size': layout['title_font_size'], 'min_sp': layout['title_font_space'], 'y_padding': layout['title_y_padding']}
-        title = self.wordwrap(paragraph=_title, **kwargs1)
+        title = self.wordwrap(paragraph=self.title, **kwargs1)
         kwargs2 = {'rows': layout['summary_rows'], 'row_length': layout['summary_row_length'], 'font': layout['font'],
                     'font_size': layout['summary_font_size'], 'min_sp': layout['summary_font_space'], 'y_padding': layout['summary_y_padding']}
-        summary = self.wordwrap(paragraph=_summary, **kwargs2)
+        summary = self.wordwrap(paragraph=self.summary, **kwargs2)
         # svg text: title
         (x, y) = (50, 105) if (len(title) == 3 and len(summary) >= 3) else (50, 120)
         a, y = self.text_proccessing(x=x, y=y, paragraph=title, **kwargs1)
@@ -375,27 +364,25 @@ class WordProccessing:
         return [ x[1] for x in sorted(d.items())] 
 
     def daytime(self):
-        config = self.config
-        lat = config['lat'] if 'lat' in config else None
-        lon = config['lon'] if 'lon' in config else None
-        zone = config['timezone']
-        tz = zoneinfo.ZoneInfo(zone)
-        offset = datetime.now(tz).utcoffset().seconds
-        now = config['now']
+        lat = self.config['lat'] if 'lat' in config else None
+        lon = self.config['lon'] if 'lon' in config else None
+        zone = self.config['timezone']
+        tz = self.config['tz']
+        now = self.config['now']
         try:
+            offset = datetime.now(tz).utcoffset().seconds
             city, region = zone.split('/')
+            location = LocationInfo(city, region, zone, lat, lon)
+            s = sun(location.observer, date=date.today(), tzinfo=tz)
+            _sunrise, _sunset = s['sunrise'], s['sunset']
+            sunrise, sunset = int(_sunrise.timestamp()), int(_sunset.timestamp())
+            if sunrise >= now or sunset <= now:
+                state = 'night'
+            else:
+                state = 'day'
+            return state
         except:
-            city = zone
-            region = str()
-        location = LocationInfo(city, region, zone, lat, lon)
-        s = sun(location.observer, date=date.today(), tzinfo=tz)
-        _sunrise, _sunset = s['sunrise'], s['sunset']
-        sunrise, sunset = int(_sunrise.timestamp()), int(_sunset.timestamp())
-        if sunrise >= now or sunset <= now:
-            state = 'night'
-        else:
-            state = 'day'
-        return state
+            return None
 
 def main(config, flag_dump, flag_config, flag_svg, flag_png, flag_display):
     entries = get_source(config['url'], entries=config['entries'])
@@ -486,6 +473,8 @@ if __name__ == "__main__":
         a = sys.argv[1]
     else:
         a = "setting.xml"
+    # User setting
+    user_setting = 'config/user.xml'
     config = read_config(setting=a, user=user_setting)
     main(config, flag_dump, flag_config, flag_svg, flag_png, flag_display)
     
