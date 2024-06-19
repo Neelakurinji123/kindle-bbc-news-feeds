@@ -99,7 +99,7 @@ e.g.) Openwrt
 
 ```
 opkg update
-opkg install python3 python3-pytz python3-requests python3-setuptools python3-pip
+opkg install python3 python3-ctypes python3-requests python3-setuptools python3-pip
 opkg install imagemagick
 opkg install cairo
 pip3 install lxml
@@ -256,10 +256,11 @@ Check out rss every 10 minutes.
 `crontab -e`
 
 ```
-5,10,15,20,25,30,35,40,45,50,55 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.py 2>>/tmp/kindle-news-station.err'
+5,15,25,35,45,55 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.py 2>>/tmp/kindle-news-station.err'
 
 ```
 
 # Credits
 
 - [bbc](https://www.bbc.com/news) ,British public service broadcaster.
+- [Wand](https://docs.wand-py.org/), MagickWand API bindings for Python.
