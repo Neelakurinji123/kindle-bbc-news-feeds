@@ -134,11 +134,6 @@ class WordProccessing:
         
     def png(self, svg=None):
         layout = self.config['layout']
-        link = self.link
-        #media_thumbnail = self.media_thumbnail
-        #published = self.published
-        #_summary = self.summary
-        #_title = self.title
         zone = self.config['timezone']
         now = self.config['now']
         tz = self.config['tz']
@@ -147,7 +142,7 @@ class WordProccessing:
         # Logo png
         png_logo = self.img_logo()
         # QR code
-        img = qrcode.make(link)
+        img = qrcode.make(self.link)
         png_qr = io.BytesIO()
         img.save(png_qr)
         png_qr_val = png_qr.getvalue()
