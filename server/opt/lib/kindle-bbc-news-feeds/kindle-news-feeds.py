@@ -101,11 +101,12 @@ def read_config(setting, user=None):
         config['lon'] = '0'
     
     if config['timezone'] == 'local':
-        config['now'] = int(datetime.now().timestamp())
         config['tz'] = None
+        config['now'] = int(datetime.now().timestamp())
     else:
-        config['now'] = int(datetime.now(tz).timestamp())
         config['tz'] = zoneinfo.ZoneInfo(config['timezone'])
+        config['now'] = int(datetime.now(config['tz']).timestamp())
+        
 
     return config
 
@@ -260,10 +261,11 @@ class WordProccessing:
             width, height = 800, 600
         else:
             width, height = 600, 800
-        header = '<?xml version="1.0" encoding="' + layout['encoding'] + '"?>\n'
-        header += f'<svg xmlns="http://www.w3.org/2000/svg" height="{height}" width="{width}" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">\n'
-        header += '<g font-family="' + layout['font'] + '">\n'
-    
+        encoding = layout['encoding']
+        font = layout['font']
+        header = f'''<?xml version="1.0" encoding="{encoding}"?>\n
+<svg xmlns="http://www.w3.org/2000/svg" height="{height}" width="{width}" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">\n
+<g font-family="{font}">\n'''
         # maintenant
         if self.config['timezone'] == 'local':
             maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %d %b %H:%M')))
@@ -292,32 +294,30 @@ class WordProccessing:
         else:
             ago = str(da) + ' days ago'       
         body += SVGtools.text('start', '30', 20, 40, ( 'created at ' + maintenant)).svg()
-        #site = config['logo'] + ' ' + config['category']
-        #body += SVGtools.text('end', '30', 780, 40, site).svg()
         body += SVGtools.text('end', '30', 780, 40, ago).svg()
         body += '</g>\n'
         style = 'stroke:rgb(128,128,128);stroke-width:1px;'
         body += SVGtools.line(x1=0, x2=800, y1=50, y2=50, style=style).svg()  
-        kwargs1 = {'rows': layout['title_rows'], 'row_length': layout['title_row_length'], 'font': layout['font'], 
+        kw1 = {'rows': layout['title_rows'], 'row_length': layout['title_row_length'], 'font': layout['font'], 
                     'font_size': layout['title_font_size'], 'min_sp': layout['title_font_space'], 'y_padding': layout['title_y_padding']}
-        title = self.wordwrap(paragraph=self.title, **kwargs1)
-        kwargs2 = {'rows': layout['summary_rows'], 'row_length': layout['summary_row_length'], 'font': layout['font'],
+        title = self.wordwrap(paragraph=self.title, **kw1)
+        kw2 = {'rows': layout['summary_rows'], 'row_length': layout['summary_row_length'], 'font': layout['font'],
                     'font_size': layout['summary_font_size'], 'min_sp': layout['summary_font_space'], 'y_padding': layout['summary_y_padding']}
-        summary = self.wordwrap(paragraph=self.summary, **kwargs2)
+        summary = self.wordwrap(paragraph=self.summary, **kw2)
         # svg text: title
         (x, y) = (50, 105) if (len(title) == 3 and len(summary) >= 3) else (50, 120)
-        a, y = self.text_proccessing(x=x, y=y, paragraph=title, **kwargs1)
+        a, y = self.text_proccessing(x=x, y=y, paragraph=title, **kw1)
         body += a
         # svg text: summary
         (x, y) = (60, y + 10) if len(title) < 3 else (60, y - 10) 
-        a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **kwargs2)
+        a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **kw2)
         body += a
         # svg text: category
         body += SVGtools.text('start', '16', 5, 595, 'category: ' + config['category']).svg()
         footer = '</svg>\n'
         return header + body + footer
 
-    def text_proccessing(self, x, y, rows, row_length, font, font_size, min_sp, paragraph, y_padding):
+    def text_proccessing(self, x, y, rows, row_length, font, font_size, min_sp, paragraph, y_padding, **kw):
         f = ImageFont.truetype(font, font_size)
         row = 1
         _x = x
@@ -337,7 +337,7 @@ class WordProccessing:
             row += 1                      
         return a + '</g>\n', y
         
-    def wordwrap(self, rows, row_length, font, font_size, min_sp, paragraph, y_padding):
+    def wordwrap(self, rows, row_length, font, font_size, min_sp, paragraph, y_padding, **kw):
         f = ImageFont.truetype(font, font_size)
         s = list()
         d = dict()
@@ -463,7 +463,7 @@ if __name__ == "__main__":
         flag_display = True
         sys.argv.remove('display')
         
-    # Use custom setting   
+    # Use custom feed setting   
     if len(sys.argv) > 1:
         a = sys.argv[1]
     else:
