@@ -306,7 +306,8 @@ class WordProccessing:
         a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **kw2)
         body += a
         # svg text: category
-        body += SVGtools.text('start', '16', 5, 595, f'category: {config['category']}').svg()
+        #body += SVGtools.text('start', '16', 5, 595, f'category: {config['category']}').svg()
+        body += SVGtools.text('start', '16', 5, 595, f'category: {config['category']}', font_family=font).svg_font()
         s = SVGtools.format(encoding=encoding, height=height, width=width, font=font, _svg=body).svg()
         return s
 

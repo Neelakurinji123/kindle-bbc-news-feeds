@@ -20,21 +20,26 @@ class format:
 
 # Reguler font
 class text:
-    def __init__(self, anchor, fontsize, x, y, v, stroke=None):
+    def __init__(self, anchor, fontsize, x, y, v, stroke=None, font_family=None):
         self.anchor = anchor
         self.fontsize = fontsize
         self.x = x
         self.y = y
         self.v = v
         self.stroke = stroke
+        self.font_family = font_family
 
     def svg(self):
         if not self.stroke == None:
-            return '<text style="text-anchor:{};" font-size="{}px" x="{}" y="{}" stroke="{}" fill="{}">{}</text>\n'.\
-                   format(self.anchor, self.fontsize, self.x, self.y, self.stroke, self.stroke, self.v)
+            return f'<text style="text-anchor:{self.anchor};" font-size="{self.fontsize}px" x="{self.x}" y="{self.y}" stroke="{self.stroke}" fill="{self.stroke}">{self.v}</text>\n'
         else:
-            return '<text style="text-anchor:{};" font-size="{}px" x="{}" y="{}">{}</text>\n'.\
-                   format(self.anchor, self.fontsize, self.x, self.y, self.v)
+            return f'<text style="text-anchor:{self.anchor};" font-size="{self.fontsize}px" x="{self.x}" y="{self.y}">{self.v}</text>\n'
+    def svg_font(self):
+        a = f'<g font-family="{self.font_family}">\n'
+        a += self.svg()
+        a += '</g>'
+        return a
+        
 
 # Bold font
 class text2:
