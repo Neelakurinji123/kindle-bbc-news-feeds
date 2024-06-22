@@ -10,14 +10,10 @@ from pathlib import Path
 import time as t
 from datetime import datetime, date
 import zoneinfo
-import requests
 from urllib.request import urlopen
 import feedparser
 import xml.etree.ElementTree as ET
 from subprocess import Popen, PIPE
-from lxml import html
-from html.parser import HTMLParser
-from xml.dom import minidom
 from PIL import ImageFont
 from wand.image import Image
 from wand.drawing import Drawing
@@ -263,9 +259,6 @@ class WordProccessing:
             width, height = 600, 800
         encoding = layout['encoding']
         font = layout['font']
-        header = f'''<?xml version="1.0" encoding="{encoding}"?>\n
-<svg xmlns="http://www.w3.org/2000/svg" height="{height}" width="{width}" version="1.1" xmlns:xlink="http://www.w3.org/1999/xlink">\n
-<g font-family="{font}">\n'''
         # maintenant
         if self.config['timezone'] == 'local':
             maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %d %b %H:%M')))
@@ -284,16 +277,16 @@ class WordProccessing:
         elif da == 0 and hr == 0 and mi == 1:
             ago = 'now' 
         elif da == 0 and hr == 0:
-            ago = str(mi) + ' mins ago'
+            ago = f'{mi} mins ago'
         elif da == 0 and hr == 1:
-            ago = str(hr) + ' hr ago'
+            ago = f'{hr} hr ago'
         elif da == 0:
-            ago = str(hr) + ' hrs ago'
+            ago = f'{hr} hrs ago'
         elif da == 1:
-            ago = str(da) + ' day ago'
+            ago = f'{da} day ago'
         else:
-            ago = str(da) + ' days ago'       
-        body += SVGtools.text('start', '30', 20, 40, ( 'created at ' + maintenant)).svg()
+            ago = f'{da} days ago'       
+        body += SVGtools.text('start', '30', 20, 40, f'created at {maintenant}').svg()
         body += SVGtools.text('end', '30', 780, 40, ago).svg()
         body += '</g>\n'
         style = 'stroke:rgb(128,128,128);stroke-width:1px;'
@@ -313,9 +306,9 @@ class WordProccessing:
         a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **kw2)
         body += a
         # svg text: category
-        body += SVGtools.text('start', '16', 5, 595, 'category: ' + config['category']).svg()
-        footer = '</svg>\n'
-        return header + body + footer
+        body += SVGtools.text('start', '16', 5, 595, f'category: {config['category']}').svg()
+        s = SVGtools.format(encoding=encoding, height=height, width=width, font=font, _svg=body).svg()
+        return s
 
     def text_proccessing(self, x, y, rows, row_length, font, font_size, min_sp, paragraph, y_padding, **kw):
         f = ImageFont.truetype(font, font_size)

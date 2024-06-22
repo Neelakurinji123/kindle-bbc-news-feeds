@@ -85,13 +85,12 @@ Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle
 #### Python3(v3.11 or newer) and module requirements
 
 - tzdata
-- requests
 - setuptools
 - pip
 - Wand
+- Pillow
 - qrcode
 - feedparser
-- lxml
 - cairosvg
 - astral (optional)
 
@@ -99,14 +98,16 @@ e.g.) Openwrt
 
 ```
 opkg update
-opkg install python3 python3-ctypes python3-requests python3-setuptools python3-pip
+opkg install python3 python3-ctypes python3-setuptools python3-pip
 opkg install imagemagick
 opkg install cairo
-pip3 install lxml
+pip3 install tzdata 
+pip3 install pillow
+pip3 install feedparser 
 pip3 install cairosvg
 pip3 install qrcode
-pip3 install astral  # optional
 pip3 install Wand
+pip3 install astral  # optional
 
 ```
 
