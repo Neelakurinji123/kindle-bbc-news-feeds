@@ -56,6 +56,7 @@ Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle
 - img\_effect: From `0` to `9` (one of ineger)
 - dark\_mode: `True`, `False`, `Auto` (if `timezone` in `config/user.xml` is `local`, `Auto` mode isn't effective)
 
+<kbd><img src="sample_images/KindleNewsStation_flatten_darkmode.png" height="360" alt="Kindle 3 Screenshot" /></kbd>&nbsp;
 
 #### c) sheet layout
 
