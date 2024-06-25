@@ -19,8 +19,6 @@ from wand.image import Image
 from wand.drawing import Drawing
 from wand.display import display
 from cairosvg import svg2png
-from astral import LocationInfo
-from astral.sun import sun
 import qrcode
 
 # Working dir
@@ -80,28 +78,28 @@ def read_config(setting, user=None):
             config['layout']['summary_rows'] = int(service.find('summary_rows').text)
             config['layout']['summary_y_padding'] = int(service.find('summary_y_padding').text)
             config['layout']['img_effect'] = int(service.find('img_effect').text)
+            config['layout']['dark_mode'] = service.find('dark_mode').text
     # user config
     if not user == None:
         tree = ET.parse(user)
         root = tree.getroot()
         for service in root.findall('service'):
             if service.get('name') == 'user':
-                config['timezone'] = service.find('timezone').text if service.find('timezone').text is not None else 'UTC'
-                #config['dark_mode'] = service.find('dark_mode').text
-                config['lat'] = float(service.find('lat').text) if service.find('lat').text is not None else 0
-                config['lon'] = float(service.find('lon').text) if service.find('lon').text is not None else 0
+                config['timezone'] = service.find('timezone').text if service.find('timezone') is not None else 'UTC'
+                #config['lat'] = float(service.find('lat').text) if service.find('lat').text is not None else 0
+                #config['lon'] = float(service.find('lon').text) if service.find('lon').text is not None else 0
+                config['lat'] = float(service.find('lat').text) if service.find('lat') is not None else 0
+                config['lon'] = float(service.find('lon').text) if service.find('lon') is not None else 0
     else:
         config['timezone'] = 'UTC'
-        #config['dark_mode'] = 'False'
         config['lat'] = '0'
         config['lon'] = '0'
     
     if config['timezone'] == 'local':
-        config['tz'] = None
         config['now'] = int(datetime.now().timestamp())
     else:
-        config['tz'] = zoneinfo.ZoneInfo(config['timezone'])
-        config['now'] = int(datetime.now(config['tz']).timestamp())
+        tz = zoneinfo.ZoneInfo(config['timezone'])
+        config['now'] = int(datetime.now(tz).timestamp())
         
 
     return config
@@ -128,12 +126,13 @@ class WordProccessing:
         self.published = entry['published']
         self.summary = entry['summary']
         self.title = entry['title']
+        self.dark_mode = config['layout']['dark_mode']
+        self.tz = zoneinfo.ZoneInfo(config['timezone']) if not config['timezone'] == 'local' else None
         
     def png(self, svg=None):
         layout = self.config['layout']
         zone = self.config['timezone']
         now = self.config['now']
-        tz = self.config['tz']
         # News clip
         png_clip = self.img_clip()
         # Logo png
@@ -152,24 +151,25 @@ class WordProccessing:
             # QR image
             with Image(blob=png_qr_val) as fg_img:
                 fg_img.resize(200, 200)
-                #bg_img.composite(fg_img, left=20, top=385)
                 bg_img.composite(fg_img, left=20, top=285)
                 bg_img.format = 'png'
             fg_img.close()
             # Logo image
             with Image(blob=png_logo) as fg_img:
-                #bg_img.composite(fg_img, left=40, top=290)
                 bg_img.composite(fg_img, left=58, top=500)
                 bg_img.format = 'png'
             fg_img.close()
             # Image clip
             with Image(blob=png_clip) as fg_img:
                 # image ratio: (16:9)
+                if self.dark_mode == 'True' or (self.dark_mode == 'Auto' and self.daytime() == 'night'):
+                    fg_img.negate(True,"all_channels")
                 bg_img.composite(fg_img, left=(800 - 560), top=(600 - 315))
                 bg_img.format = 'png'
             fg_img.close()
+                
             bg_img.rotate(90)
-            bg_img.alpha_channel_types = 'flatten'
+            bg_img.alpha_channel_types = 'flatten' 
             img_blob = bg_img.make_blob('png')
         bg_img.close()
         return img_blob
@@ -179,31 +179,28 @@ class WordProccessing:
         clip = urlopen(self.media_thumbnail)
         try:
             with Image(file=clip) as img:
+                if self.dark_mode == 'True' or (self.dark_mode == 'Auto' and self.daytime() == 'night'):
+                    img.negate(True,"all_channels")
+                    
                 with img.clone() as i:
                     i.resize(560, 315) # 16:9
                     if layout['img_effect'] == 0:  # grey
                         i.transform_colorspace('gray')
-                        png_blob = i.make_blob('png')
                     if layout['img_effect'] == 1:  # Color Threshold
                         i.color_threshold(start='#333', stop='#cdc')
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 2:  # Auto Threshold ('triangle'))
                         i.auto_threshold(method='triangle')
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 3: # Adaptive Threshold
                         i.transform_colorspace('gray')
                         i.adaptive_threshold(width=16, height=16,
                             offset=-0.08 * i.quantum_range)
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 4: # Ordered Dither (Circles 6x6)
                         i.transform_colorspace('gray')
                         i.ordered_dither('c6x6b')
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 5: # Random Threshold
                         i.transform_colorspace('gray')
                         i.random_threshold(low=0.3 * i.quantum_range,
                              high=0.6 * i.quantum_range)
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 6: # Range Threshold (soft)
                         i.transform_colorspace('gray')
                         white_point = 0.9 * i.quantum_range
@@ -213,21 +210,19 @@ class WordProccessing:
                             low_white=white_point - delta,
                             high_white=white_point + delta,
                             high_black=black_point + delta)
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 7: # black & white
                         i.transform_colorspace('gray')
                         i.background_color = 'white'
                         i.alpha_channel = False
                         i.threshold(threshold=0.25)
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 8: # Sketch
                         i.transform_colorspace('gray')
                         i.sketch(0.5, 0.0, 98.0)
-                        png_blob = i.make_blob('png')
                     elif layout['img_effect'] == 9: # Noise
                         i.noise("laplacian", attenuate=1.0)
                         i.transform_colorspace('gray')
-                        png_blob = i.make_blob('png')
+                        
+                    png_blob = i.make_blob('png')
         finally:
             clip.close()
         return png_blob
@@ -251,7 +246,6 @@ class WordProccessing:
         layout = self.config['layout']
         zone = self.config['timezone']
         now = self.config['now']
-        tz = self.config['tz']
         body = str()
         if layout['paper_layout'] == 'landscape':
             width, height = 800, 600
@@ -263,7 +257,7 @@ class WordProccessing:
         if self.config['timezone'] == 'local':
             maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %d %b %H:%M')))
         else:
-            maintenant = (str.lower(datetime.fromtimestamp(now, tz).strftime('%a, %d %b %H:%M')))
+            maintenant = (str.lower(datetime.fromtimestamp(now, self.tz).strftime('%a, %d %b %H:%M')))
         # published
         utc = zoneinfo.ZoneInfo('UTC')
         self.published.append(utc)
@@ -352,16 +346,17 @@ class WordProccessing:
         return [ x[1] for x in sorted(d.items())] 
 
     def daytime(self):
-        lat = self.config['lat'] if 'lat' in config else None
-        lon = self.config['lon'] if 'lon' in config else None
+        lat = self.config['lat'] if 'lat' in self.config else None
+        lon = self.config['lon'] if 'lon' in self.config else None
         zone = self.config['timezone']
-        tz = self.config['tz']
         now = self.config['now']
         try:
-            offset = datetime.now(tz).utcoffset().seconds
+            from astral import LocationInfo
+            from astral.sun import sun
+            offset = datetime.now(self.tz).utcoffset().seconds
             city, region = zone.split('/')
             location = LocationInfo(city, region, zone, lat, lon)
-            s = sun(location.observer, date=date.today(), tzinfo=tz)
+            s = sun(location.observer, date=date.today(), tzinfo=self.tz)
             _sunrise, _sunset = s['sunrise'], s['sunset']
             sunrise, sunset = int(_sunrise.timestamp()), int(_sunset.timestamp())
             if sunrise >= now or sunset <= now:
@@ -397,6 +392,8 @@ def main(config, flag_dump, flag_config, flag_svg, flag_png, flag_display):
             exit(0)
         img_blob = p.png(svg=svg)
         with Image(blob=img_blob) as img:
+            if config['layout']['dark_mode'] == 'True' or (config['layout']['dark_mode'] == 'Auto' and p.daytime() == 'night'):
+                img.negate(True,"all_channels")
             img.format = 'png'
             fname = 'KindleNewsStation_flatten_'
             flatten_pngfile = fname + str(n) + '.png'

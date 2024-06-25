@@ -44,24 +44,25 @@ Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle
 `config/user.xml`
 
 - timezone: required
-- dark\_mode: (WIP)
 - lat & Lon (coordinate): optional
 
 #### b) sheet layout
 
 `config/sheet_layout###.xml`
 
-- paper\_layout: 'landscape' (fixed)
-- encoding: 'iso-8859-1' (fixed)
+- paper\_layout: `landscape` (fixed)
+- encoding: `iso-8859-1` (fixed)
 - font: (any font name in server, a full font path in Openwrt)
-- img\_effect: From 0 to 6 (one of ineger)
+- img\_effect: From `0` to `9` (one of ineger)
+- dark\_mode: `True`, `False`, `Auto` (if `timezone` in `config/user.xml` is `local`, `Auto` mode isn't effective)
+
 
 #### c) sheet layout
 
 `settings######.xml`
 
 - Site setting
-  - template: 'bbc-news' (fixed)
+  - template: `bbc-news` (fixed)
   - category: String (one of valid category)
   - entries : Integer (entry number)
   - layout: Sheet layout file, e.g. `config/sheet_layout.xml`

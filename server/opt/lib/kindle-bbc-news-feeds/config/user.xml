@@ -2,7 +2,6 @@
 <data>
 	<service name="user">
 		<timezone>Asia/Tokyo</timezone>
-		<dark_mode>Auto</dark_mode>
 		<lat>35.676</lat>
 		<lon>139.65</lon>
 	</service>

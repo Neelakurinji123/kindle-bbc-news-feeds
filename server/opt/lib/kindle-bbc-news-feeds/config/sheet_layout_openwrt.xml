@@ -17,6 +17,7 @@
 		<summary_font_space>5</summary_font_space>
 		<summary_rows>3</summary_rows>
 		<summary_y_padding>30</summary_y_padding>
-		<img_effect>6</img_effect>
+		<img_effect>0</img_effect>
+		<dark_mode>False</dark_mode>
 	</service>
 </data>

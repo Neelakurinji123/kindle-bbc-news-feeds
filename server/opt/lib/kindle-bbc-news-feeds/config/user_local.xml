@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<data>
+	<service name="user">
+		<timezone>local</timezone>
+	</service>
+</data>
