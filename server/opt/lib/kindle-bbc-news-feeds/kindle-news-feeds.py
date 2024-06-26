@@ -273,11 +273,11 @@ class WordProccessing:
         elif da == 0 and hr == 0:
             ago = f'{mi} mins ago'
         elif da == 0 and hr == 1:
-            ago = f'{hr} hr ago'
+            ago = 'an hour ago'
         elif da == 0:
             ago = f'{hr} hrs ago'
         elif da == 1:
-            ago = f'{da} day ago'
+            ago = 'a day ago'
         else:
             ago = f'{da} days ago'       
         body += SVGtools.text('start', '30', 20, 40, f'created at {maintenant}').svg()
