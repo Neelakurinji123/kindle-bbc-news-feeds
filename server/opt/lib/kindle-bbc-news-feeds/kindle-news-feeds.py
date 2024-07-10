@@ -152,36 +152,31 @@ class WordProccessing:
             with Image(blob=png_qr_val) as fg_img:
                 fg_img.resize(200, 200)
                 bg_img.composite(fg_img, left=20, top=285)
-                bg_img.format = 'png'
             fg_img.close()
             # Logo image
             with Image(blob=png_logo) as fg_img:
                 bg_img.composite(fg_img, left=58, top=500)
-                bg_img.format = 'png'
-            fg_img.close()
-            # Image clip
-            with Image(blob=png_clip) as fg_img:
-                # image ratio: (16:9)
-                if self.dark_mode == 'True' or (self.dark_mode == 'Auto' and self.daytime() == 'night'):
-                    fg_img.negate(True,"all_channels")
-                bg_img.composite(fg_img, left=(800 - 560), top=(600 - 315))
-                bg_img.format = 'png'
-            fg_img.close()
-                
-            bg_img.rotate(90)
-            bg_img.alpha_channel_types = 'flatten' 
+            fg_img.close() 
             img_blob = bg_img.make_blob('png')
         bg_img.close()
+        # Dark mode
+        if config['layout']['dark_mode'] == 'True' or (config['layout']['dark_mode'] == 'Auto' and self.daytime() == 'night'):
+            print('darkmode')
+            with Image(blob=img_blob) as img:
+                with img.clone() as i:
+                     i.negate(True,"all_channels")
+                     i_blob = i.make_blob('png')
+                i.close()
+            img.close()
+            img_blob = i_blob
+            
         return img_blob
         
     def img_clip(self):
         layout = self.config['layout']
         clip = urlopen(self.media_thumbnail)
         try:
-            with Image(file=clip) as img:
-                if self.dark_mode == 'True' or (self.dark_mode == 'Auto' and self.daytime() == 'night'):
-                    img.negate(True,"all_channels")
-                    
+            with Image(file=clip) as img:                    
                 with img.clone() as i:
                     i.resize(560, 315) # 16:9
                     if layout['img_effect'] == 0:  # grey
@@ -392,8 +387,13 @@ def main(config, flag_dump, flag_config, flag_svg, flag_png, flag_display):
             exit(0)
         img_blob = p.png(svg=svg)
         with Image(blob=img_blob) as img:
-            if config['layout']['dark_mode'] == 'True' or (config['layout']['dark_mode'] == 'Auto' and p.daytime() == 'night'):
-                img.negate(True,"all_channels")
+            # Image clip
+            with Image(blob=p.img_clip()) as fg_img:
+                # image ratio: (16:9)
+                img.composite(fg_img, left=(800 - 560), top=(600 - 315))
+            fg_img.close()
+            img.alpha_channel_types = 'flatten'
+            img.rotate(90)
             img.format = 'png'
             fname = 'KindleNewsStation_flatten_'
             flatten_pngfile = fname + str(n) + '.png'
