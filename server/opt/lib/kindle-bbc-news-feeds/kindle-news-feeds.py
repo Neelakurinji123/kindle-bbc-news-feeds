@@ -133,8 +133,6 @@ class WordProccessing:
         layout = self.config['layout']
         zone = self.config['timezone']
         now = self.config['now']
-        # News clip
-        png_clip = self.img_clip()
         # Logo png
         png_logo = self.img_logo()
         # QR code
@@ -161,7 +159,6 @@ class WordProccessing:
         bg_img.close()
         # Dark mode
         if config['layout']['dark_mode'] == 'True' or (config['layout']['dark_mode'] == 'Auto' and self.daytime() == 'night'):
-            print('darkmode')
             with Image(blob=img_blob) as img:
                 with img.clone() as i:
                      i.negate(True,"all_channels")
@@ -414,8 +411,8 @@ def main(config, flag_dump, flag_config, flag_svg, flag_png, flag_display):
     display_reset = kindle['display_reset']
     post_run = kindle['post_run']
     kindleIP = '192.168.2.2'
-    cmd = f'''`ssh root@{kindleIP} 'pidof powerd'` 
-if [ "$p" != '' ]; then
+    cmd = f'''p=`ssh root@{kindleIP} 'pidof powerd'` 
+if [ -n "$p" ]; then
     ssh root@{kindleIP} "/etc/init.d/powerd stop"
     ssh root@{kindleIP} "/etc/init.d/framework stop"
 fi'''
