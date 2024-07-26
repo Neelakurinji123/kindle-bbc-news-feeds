@@ -1,6 +1,6 @@
 # Kindle bbc news feeds
  
-This repo is for a bbc feeds display on old kindle 3.
+This repo is for a bbc feeds display on old kindle 3 and Paperwhite 1.
 
 ## Screenshots
 
@@ -10,10 +10,10 @@ This repo is for a bbc feeds display on old kindle 3.
 
 ## Requirements
 
-- Jailbroken Kindle 3: https://wiki.mobileread.com/wiki/Kindle\_Hacks\_Information
-- Server: Minimum 256M/100M OpenWrt router or SBC (e.g. OrangePi zero)
-- Server OS: Openwrt, Ubuntu and Debian, etc which works with Python v3.11 or newer.
-- Server's devices: USB port x1, LAN port x1
+- Jailbroken Kindle: https://wiki.mobileread.com/wiki/Kindle\_Hacks\_Information
+- Server (for Kindle 3): Minimum 256M/100M OpenWrt router or SBC (e.g. OrangePi zero)
+- Server OS (for Kindle 3): Openwrt, Ubuntu and Debian, etc which works with Python v3.11 or newer.
+- Server's devices (for Kindle 3): USB port x1, LAN port x1
 
 
 
@@ -22,10 +22,10 @@ This repo is for a bbc feeds display on old kindle 3.
 kindle requires special PNG format. Converting process is as follows:
 
 ```
-                                               [The server sends a PNG file to Kindle and displays it]
+[Image Process]
  SVG image ------------> PNG image ----------> flattened PNG image --> Kindle Dispaly
            converter:              converter:
-            Wand                    convert
+            Wand                    Wand
             cairosvg
             qrcode
            
@@ -35,7 +35,11 @@ kindle requires special PNG format. Converting process is as follows:
 
 ### 1. Install the program
 
-Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle-bbc-news-feeds`.
+Paperwhite 1:
+`(github)/kindle/kindle-bbc-news-feeds` to `(kindle)/mnt/us/kindle-bbc-news-feeds`.
+
+kindle 3:
+Copy `(github)/kindle/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle-bbc-news-feeds`.
 
 ### 2. Edit config files
 
@@ -50,15 +54,14 @@ Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle
 
 `config/sheet_layout###.xml`
 
-- paper\_layout: `landscape` (fixed)
 - encoding: `iso-8859-1` (fixed)
-- font: (any font name in server, a full font path in Openwrt)
-- img\_effect: From `0` to `9` (one of ineger)
+- font: (a full font path)
+- img\_effect: From `0` to `4` (one of ineger)
 - dark\_mode: `True`, `False`, `Auto` (if `timezone` in `config/user.xml` is `local`, `Auto` mode isn't effective)
 
 <kbd><img src="sample_images/KindleNewsStation_flatten_darkmode.png" height="360" alt="Kindle 3 Screenshot" /></kbd>&nbsp;
 
-#### c) sheet layout
+#### c) bbc news site and kindle settings
 
 `settings######.xml`
 
@@ -80,11 +83,11 @@ Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle
 
 #### Application requirements
 
-- imageMagick
-- cairo
-- fontconfig
-
-#### Python3(v3.11 or newer) and module requirements
+- imageMagick (include in python3 package of kindle)
+- cairo (kindle system)
+- fontconfig (kindle system)
+- 
+#### Python3(v3.9 or newer) and module requirements
 
 - tzdata
 - setuptools
@@ -96,7 +99,8 @@ Copy `(github)/server/opt/lib/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle
 - cairosvg
 - astral (optional)
 
-e.g.) Openwrt
+
+#### To use Openwrt server
 
 ```
 opkg update
@@ -139,16 +143,16 @@ To retrieve data correctly, setup NTP server.
 
 All set up finished, then try it.
 
-`./kindle-news-feeds.py png` # use default config
+`./news-feeds.py png` # use default config
 
 or one of config files:
 
-`./kindle-news-feeds.py settings_######.xml png`
+`./news-feeds.py settings_######.xml png`
 
 Take a look at `/tmp/KindleNewsStation_flatten.png`.
 
 
-### 7. Install USB network
+### 7. Install USB network (optional)
 
 Connect a USB cable to both server and Kindle.&nbsp;
 USB cable uses for network and power supply.&nbsp;
@@ -160,7 +164,7 @@ e.g.) Openwrt
 opkg install kmod-usb-net kmod-usb-net-rndis kmod-usb-net-cdc-ether usbutils
 ```
 
-## Set up Kindle
+## Set up Kindle 3 and server
 
 ### 1. Set up usbnet
 
@@ -221,7 +225,7 @@ ssh root@192.168.2.2  # test passwordless login
 
 ```
 cd /opt/lib/kindle-bbc-news-feeds
-./kindle-news-feeds.py [settings_#####.xml]
+./news-feeds.py [settings_#####.xml]
 ```
 
 ## Set up time schedule
@@ -233,12 +237,24 @@ Edit server's crontab and restart cron.
 
 To display news feeds every hour.
 
-e.g.) 
+e.g. pw1) 
 
-`crontab -e`
+`/etc/crontab/root`
 
 ```
-30 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.py 2>>/tmp/kindle-news-station.err'
+30 * * * * sh -c 'cd /mnt/us/kindle-bbc-news-feeds; . ./env_pw1; news-feeds.py 2>>/tmp/kindle-news-station.err'
+
+```
+
+```
+kill -HUP `pidof crond`
+```
+e.g. k3) 
+
+`/etc/crontab/root`
+
+```
+30 * * * * sh -c 'cd /opt/lib/kindle-bbc-news-feeds; . ./env_k3; news-feeds.py 2>>/tmp/kindle-news-station.err'
 
 ```
 

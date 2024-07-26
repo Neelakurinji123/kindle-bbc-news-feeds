@@ -1,0 +1,6 @@
+#export MAGICK_HOME=/mnt/us/python3
+#export WAND_MAGICK_LIBRARY_SUFFIX="-6.Q8"
+export KINDLE_VER='k3'
+export KINDLE_H=600
+export KINDLE_W=800
+export kindleIP='192.168.2.2'
