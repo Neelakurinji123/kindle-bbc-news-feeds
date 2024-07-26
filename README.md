@@ -31,8 +31,7 @@ kindle requires special PNG format. Converting process is as follows:
            
 ```
 
-## Set up server
-
+## Setting up
 ### 1. Install the program
 
 Paperwhite 1:
