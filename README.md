@@ -11,15 +11,15 @@ This repo is for a bbc feeds display on old kindle 3 and Paperwhite 1.
 ## Requirements
 
 - Jailbroken Kindle: https://wiki.mobileread.com/wiki/Kindle\_Hacks\_Information
-- Server (for Kindle 3): Minimum 256M/100M OpenWrt router or SBC (e.g. OrangePi zero)
-- Server OS (for Kindle 3): Openwrt, Ubuntu and Debian, etc which works with Python v3.11 or newer.
+
+Kindle 3 has PIL module issue so that the system requires a server.
+- Hardware: Minimum 256M/100M OpenWrt router or SBC (e.g. OrangePi zero)
+- Server OS: Openwrt, Ubuntu and Debian, etc which works with Python v3.11 or newer.
 - Server's devices (for Kindle 3): USB port x1, LAN port x1
-
-
 
 ## Kindle PNG format
 
-kindle requires special PNG format. Converting process is as follows:
+kindle requires special PNG format. Converting is as follows:
 
 ```
 [Image Process]
@@ -40,7 +40,78 @@ Paperwhite 1:
 kindle 3:
 Copy `(github)/kindle/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle-bbc-news-feeds`.
 
-### 2. Edit config files
+### 2. Jailbrake and utilities
+
+Each model and firmware version requires different type of jailbreak. 
+See tutorial at MobileRead forum.
+
+- https://www.mobileread.com/forums/forumdisplay.php?f=150
+
+1. When kindle Jailbrake was successful, install kterm and set root password.
+2. Install KUAL and MobileRead Package Installer.
+3. Install python3 and usbnet.
+4. Start sshd daemon (dropbear or openssh)
+5. Access to kindle via usbnet or wifi, start setup this program.
+
+
+### 3. Install programs and Python3 modules.
+
+#### Application requirements
+
+- imageMagick (include in python3 package of kindle)
+- cairo (kindle system)
+- fontconfig (kindle system)
+
+#### module requirements
+
+- tzdata
+- setuptools
+- pip
+- Wand
+- Pillow
+- qrcode
+- feedparser
+- cairosvg
+- astral (optional)
+
+
+#### 3.1 Openwrt server for kindle 3
+
+```
+opkg update
+opkg install python3 python3-ctypes python3-setuptools python3-pip
+opkg install imagemagick
+opkg install cairo
+pip3 install tzdata 
+pip3 install pillow
+pip3 install feedparser 
+pip3 install cairosvg
+pip3 install qrcode
+pip3 install Wand
+pip3 install astral  # optional
+
+```
+
+#### 3.2 Example of installation for Openwrt server: To use Cairo on Openwrt.
+
+
+1. Download SDK from Openwrt site.
+2. Compile `cairo` with SDK and install the build package or use the pre-build package in this repository. (armv8 only)
+3. Install `cairosvg` via pip.
+4. Install a TTF font (e.g. `Sans_Regular.ttf` in this repository) to server's /root/.fonts: 
+5. Run `fc-cache -f`
+
+
+e.g.)
+
+```
+opkg install cairo_1.18.0-1_aarch64_generic.ipk
+opkg install fontconfig
+pip3 install cairosvg
+```
+
+
+### 4. Edit config files
 
 #### a) user config
 
@@ -55,7 +126,7 @@ Copy `(github)/kindle/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle-bbc-new
 
 - encoding: `iso-8859-1` (fixed)
 - font: (a full font path)
-- img\_effect: From `0` to `4` (one of ineger)
+- img\_effect: From `0` to `4` (ineger)
 - dark\_mode: `True`, `False`, `Auto` (if `timezone` in `config/user.xml` is `local`, `Auto` mode isn't effective)
 
 <kbd><img src="sample_images/KindleNewsStation_flatten_darkmode.png" height="360" alt="Kindle 3 Screenshot" /></kbd>&nbsp;
@@ -78,61 +149,6 @@ Copy `(github)/kindle/kindle-bbc-news-feeds` to `(server)/opt/lib/kindle-bbc-new
   - post_run: String, When a program ends, the server runs the script.
   
 
-### 4. Install programs, Python3 and it's modules.
-
-#### Application requirements
-
-- imageMagick (include in python3 package of kindle)
-- cairo (kindle system)
-- fontconfig (kindle system)
-- 
-#### Python3(v3.9 or newer) and module requirements
-
-- tzdata
-- setuptools
-- pip
-- Wand
-- Pillow
-- qrcode
-- feedparser
-- cairosvg
-- astral (optional)
-
-
-#### To use Openwrt server
-
-```
-opkg update
-opkg install python3 python3-ctypes python3-setuptools python3-pip
-opkg install imagemagick
-opkg install cairo
-pip3 install tzdata 
-pip3 install pillow
-pip3 install feedparser 
-pip3 install cairosvg
-pip3 install qrcode
-pip3 install Wand
-pip3 install astral  # optional
-
-```
-
-#### Installation for Openwrt: To use Cairo on Openwrt.
-
-
-1. Download SDK from Openwrt site.
-2. Compile `cairo` with SDK and install the build package or use the pre-build package in this repository. (armv8 only)
-3. Install `cairosvg` via pip.
-4. Install a TTF font (e.g. `Sans_Regular.ttf` in this repository) to server's /root/.fonts: 
-5. Run `fc-cache -f`
-
-
-e.g.)
-
-```
-opkg install cairo_1.18.0-1_aarch64_generic.ipk
-opkg install fontconfig
-pip3 install cairosvg
-```
 
 ### 5. Network Time Synchronization
 
@@ -142,7 +158,7 @@ To retrieve data correctly, setup NTP server.
 
 All set up finished, then try it.
 
-`./news-feeds.py png` # use default config
+`./news-feeds.py png` # Note: use default config
 
 or one of config files:
 
@@ -220,19 +236,34 @@ exit
 ssh root@192.168.2.2  # test passwordless login
 ```
 
+### 4. Environment variable
+
+Each model's system is quit defferent so that must fix it.
+To set environment variable is easiest way.
+
+Paperwhite 1:
+
+```
+. ./env_pw1
+```
+
+Kindle 3:
+
+```
+. ./env_k3
+```
+
 ### 3. Test run
 
 ```
 cd /opt/lib/kindle-bbc-news-feeds
+. ./env_k3
 ./news-feeds.py [settings_#####.xml]
 ```
 
 ## Set up time schedule
 
 Edit server's crontab and restart cron.
-
-
-### Scenario 1
 
 To display news feeds every hour.
 
@@ -241,19 +272,20 @@ e.g. pw1)
 `/etc/crontab/root`
 
 ```
-30 * * * * sh -c 'cd /mnt/us/kindle-bbc-news-feeds; . ./env_pw1; news-feeds.py 2>>/tmp/kindle-news-station.err'
+30 * * * * sh -c 'cd /mnt/us/news-feeds; . ./env_pw1; news-feeds.py 2>>/tmp/kindle-news-station.err'
 
 ```
 
 ```
 kill -HUP `pidof crond`
 ```
+
 e.g. k3) 
 
 `/etc/crontab/root`
 
 ```
-30 * * * * sh -c 'cd /opt/lib/kindle-bbc-news-feeds; . ./env_k3; news-feeds.py 2>>/tmp/kindle-news-station.err'
+30 * * * * sh -c 'cd /opt/lib/news-feeds; . ./env_k3; news-feeds.py 2>>/tmp/kindle-news-station.err'
 
 ```
 
@@ -262,21 +294,6 @@ e.g. k3)
 /etc/init.d/cron start
 ```
 
-### Scenario 2 (WIP)
-
-To display only breaking news feed.&nbsp;
-Check out rss every 10 minutes.
-
-`settings####.xml`
-
-- breaking\_news\_only: True
-
-`crontab -e`
-
-```
-5,15,25,35,45,55 * * * * sh -c '/opt/lib/kindle-bbc-news-feeds/kindle-news-feeds.py 2>>/tmp/kindle-news-station.err'
-
-```
 
 # Credits
 
