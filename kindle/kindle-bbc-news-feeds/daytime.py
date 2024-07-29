@@ -14,8 +14,12 @@ location = 'Tokyo'
 city=lookup(location, database())
 s = sun(city.observer, date=date.today())
 now =datetime.now().timestamp()
+a_day = 60 * 60 * 24
 sunrise = s["sunrise"].timestamp()
 sunset = s["sunset"].timestamp()
+
+if sunrise > sunset:
+    sunrise -= a_day
 
 if not sunrise < now < sunset:
     print('night')
