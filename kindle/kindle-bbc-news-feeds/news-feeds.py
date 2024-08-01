@@ -110,21 +110,23 @@ def read_config(setting):
     # sheet config
     tree = ET.parse(config['layout'])
     root = tree.getroot()
-    config['layout'] = dict()
+    config['layout'], config['title'], config['summary'] = dict(), dict(), dict()
     for service in root.findall('service'):
         if service.get('name') == 'paper':
             config['layout']['encoding'] = service.find('encoding').text
             config['layout']['font'] = service.find('font').text
-            config['layout']['title_font_size'] = int(service.find('title_font_size').text)
-            config['layout']['title_font_space'] = int(service.find('title_font_space').text)
-            config['layout']['title_row_length'] = int(service.find('title_row_length').text)
-            config['layout']['title_rows'] = int(service.find('title_rows').text)
-            config['layout']['title_y_padding'] = int(service.find('title_y_padding').text)
-            config['layout']['summary_font_size'] = int(service.find('summary_font_size').text)
-            config['layout']['summary_font_space'] = int(service.find('summary_font_space').text)
-            config['layout']['summary_row_length'] = int(service.find('summary_row_length').text)
-            config['layout']['summary_rows'] = int(service.find('summary_rows').text)
-            config['layout']['summary_y_padding'] = int(service.find('summary_y_padding').text)
+            config['title']['font'] = service.find('font').text
+            config['title']['font_size'] = int(service.find('title_font_size').text)
+            config['title']['font_space'] = int(service.find('title_font_space').text)
+            config['title']['row_length'] = int(service.find('title_row_length').text)
+            config['title']['rows'] = int(service.find('title_rows').text)
+            config['title']['y_padding'] = int(service.find('title_y_padding').text)
+            config['summary']['font'] = service.find('font').text
+            config['summary']['font_size'] = int(service.find('summary_font_size').text)
+            config['summary']['font_space'] = int(service.find('summary_font_space').text)
+            config['summary']['row_length'] = int(service.find('summary_row_length').text)
+            config['summary']['rows'] = int(service.find('summary_rows').text)
+            config['summary']['y_padding'] = int(service.find('summary_y_padding').text)
             config['layout']['img_effect'] = int(service.find('img_effect').text)
             config['layout']['dark_mode'] = str(service.find('dark_mode').text)
             config['layout']['user_setting'] = str(service.find('user_setting').text)
@@ -203,6 +205,8 @@ class WordProccessing:
         layout = self.config['layout']
         zone = self.config['timezone']
         now = self.config['now']
+        w = self.config['kindle_w']
+        h = self.config['kindle_h']
         # Logo png
         png_logo = self.img_logo()
         # QR code
@@ -212,7 +216,7 @@ class WordProccessing:
         png_qr_val = png_qr.getvalue()
         # SVG body
         png_body = io.BytesIO()
-        svg2png(bytestring=svg, write_to=png_body, background_color="white", parent_width=self.config['kindle_w'], parent_height=self.config['kindle_h'])
+        svg2png(bytestring=svg, write_to=png_body, background_color="white", parent_width=w, parent_height=h)
         png_body_val = png_body.getvalue()
         ratio = self.config['ratio']
 
@@ -326,26 +330,22 @@ class WordProccessing:
         body += '</g>\n'
         style = 'stroke:rgb(128,128,128);stroke-width:1px;'
         body += SVGtools.line(x1=0, x2=800, y1=50, y2=50, style=style).svg()  
-        kw1 = {'rows': layout['title_rows'], 'row_length': layout['title_row_length'], 'font': layout['font'], 
-                    'font_size': layout['title_font_size'], 'min_sp': layout['title_font_space'], 'y_padding': layout['title_y_padding']}
-        title = self.wordwrap(paragraph=self.title, **kw1)
-        kw2 = {'rows': layout['summary_rows'], 'row_length': layout['summary_row_length'], 'font': layout['font'],
-                    'font_size': layout['summary_font_size'], 'min_sp': layout['summary_font_space'], 'y_padding': layout['summary_y_padding']}
-        summary = self.wordwrap(paragraph=self.summary, **kw2)
+        title = self.wordwrap(paragraph=self.title, **self.config['title'])
+        summary = self.wordwrap(paragraph=self.summary, **self.config['summary'])
         # svg text: title
         (x, y) = (50, 105) if (len(title) == 3 and len(summary) >= 3) else (50, 120)
-        a, y = self.text_proccessing(x=x, y=y, paragraph=title, **kw1)
+        a, y = self.text_proccessing(x=x, y=y, paragraph=title, **self.config['title'])
         body += a
         # svg text: summary
         (x, y) = (60, y + 10) if len(title) < 3 else (60, y - 10) 
-        a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **kw2)
+        a, y = self.text_proccessing(x=x, y=y, paragraph=summary, **self.config['summary'])
         body += a
         # svg text: category
         body += SVGtools.text('start', '16', 5, 595, f'category: {config["category"]}', font_family=font).svg_font()
         s = SVGtools.format(encoding=encoding, height=self.config['kindle_h'], width=self.config['kindle_w'], font=font, _svg=body).svg()
         return s
 
-    def text_proccessing(self, x, y, rows, row_length, font, font_size, min_sp, paragraph, y_padding, **kw):
+    def text_proccessing(self, x, y, rows, row_length, font, font_size, font_space, paragraph, y_padding, **kw):
         f = ImageFont.truetype(font, font_size)
         row = 1
         _x = x
@@ -359,25 +359,25 @@ class WordProccessing:
             else:
                 for s in t:
                     a += SVGtools.text(anchor='start', fontsize=font_size, x=_x, y=y, v=s).svg()
-                    _x += int(f.getlength(s)) + min_sp
+                    _x += int(f.getlength(s)) + font_space
             _x = x
             y += y_padding
             row += 1
         return a + '</g>\n', y
 
-    def wordwrap(self, rows, row_length, font, font_size, min_sp, paragraph, y_padding, **kw):
+    def wordwrap(self, rows, row_length, font, font_size, font_space, paragraph, y_padding, **kw):
         f = ImageFont.truetype(font, font_size)
         s = list()
         d = dict()
         rows -= 1
         row = 0
         for w in paragraph.split():
-            if f.getlength(''.join(s)) + f.getlength(w)  + (min_sp * len(s)) > row_length and row < rows:
+            if f.getlength(''.join(s)) + f.getlength(w)  + (font_space * len(s)) > row_length and row < rows:
                 d[row] = s
                 row += 1
                 s = [w]
                 d[row] = s
-            elif f.getlength(''.join(s)) + f.getlength(w)  + (min_sp * len(s)) + f.getlength('...') > row_length and row == rows:
+            elif f.getlength(''.join(s)) + f.getlength(w)  + (font_space * len(s)) + f.getlength('...') > row_length and row == rows:
                 s.append('...')
                 d[row] = s
                 break
