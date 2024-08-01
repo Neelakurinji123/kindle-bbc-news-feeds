@@ -294,23 +294,22 @@ class WordProccessing:
     def svg(self):
         layout = self.config['layout']
         zone = self.config['timezone']
-        now = self.config['now']
         body = str()
         encoding = layout['encoding']
         font = layout['font']
         # maintenant
         if self.config['timezone'] == 'local':
-            maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %-d %b %-H:%M')))
+            maintenant = str.lower(datetime.now().strftime('%a, %-d %b %-H:%M'))
         else:
-            maintenant = (str.lower(datetime.fromtimestamp(now, self.tz).strftime('%a, %-d %b %-H:%M')))
+            maintenant = str.lower(datetime.now(self.tz).strftime('%a, %-d %b %-H:%M'))
         # published
         utc = zoneinfo.ZoneInfo('UTC')
         self.published.append(utc)
         d = datetime(*self.published)
         time = d.timestamp()
-        da = int((now - time) / 86400)
-        hr = int((now - time) / 3600)
-        mi = int((now - time) % 60)
+        da = int((self.config['now'] - time) / 86400)
+        hr = int((self.config['now'] - time) / 3600)
+        mi = int((self.config['now'] - time) % 60)
         if da == 0 and hr == 0 and mi == 0:
             ago = 'now'
         elif da == 0 and hr == 0 and mi == 1:
