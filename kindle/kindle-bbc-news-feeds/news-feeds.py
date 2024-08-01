@@ -63,6 +63,7 @@ def zone_region(zone):
         'PRC': 'Asia/Shanghai',
         'PST8PDT': 'America/Los_Angeles',
         'ROC': 'Asia/Taipei',
+        'CST': 'Asia/Taipei',
         'ROK': 'Asia/Seoul',
         'Singapore': 'Asia/Singapore',
         'Turkey': 'Europe/Istanbul',
@@ -295,9 +296,9 @@ class WordProccessing:
         font = layout['font']
         # maintenant
         if self.config['timezone'] == 'local':
-            maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %d %b %H:%M')))
+            maintenant = (str.lower(datetime.fromtimestamp(now).strftime('%a, %-d %b %-H:%M')))
         else:
-            maintenant = (str.lower(datetime.fromtimestamp(now, self.tz).strftime('%a, %d %b %H:%M')))
+            maintenant = (str.lower(datetime.fromtimestamp(now, self.tz).strftime('%a, %-d %b %-H:%M')))
         # published
         utc = zoneinfo.ZoneInfo('UTC')
         self.published.append(utc)
